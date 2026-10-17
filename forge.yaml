@@ -1,0 +1,15 @@
+# Forge service manifest. See 'forge init --help'.
+apiVersion: forge.dev/v1
+service:
+  name: forgegate
+  team: platform-engineering
+  lifecycle: experimental
+  repo: https://github.com/showmino/forgegate
+run:
+  port: 3000
+  health: /api/healthz
+  autoscaling:
+    max: 5
+  domain: forgegate.io
+  staging:
+    public: false

@@ -13,3 +13,14 @@ run:
   domain: forgegate.io
   staging:
     public: false
+resources:
+  - name: main
+    type: postgres
+    storage: 5Gi              # whole Gi, at least 1Gi (default 1Gi)
+    environments:             # optional overrides per environment
+      production:
+        storage: 20Gi
+        instances: 2
+      staging:
+        storage: 10Gi
+        instances: 1

@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,7 +26,7 @@ jobs:
   image:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -54,7 +54,7 @@ jobs:
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: image
-    runs-on: kube-runners
+    runs-on: self-hosted
     timeout-minutes: 20
     concurrency:
       group: forge-deploy-staging

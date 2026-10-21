@@ -1,4 +1,4 @@
-# forgegate
+# forgegate SSA application
 
 What forgegate is, in a sentence or two: who uses it and what for.
 These docs live in `docs/` next to the code; Forge shows them in its

@@ -101,7 +101,9 @@ Over HTTPS, the download is checked against the checksums the API serves.
 When the API has only a plain-HTTP address (not `localhost`), anyone on the
 way could change both, so `forge upgrade` reads the checksums from the release
 on GitHub over HTTPS instead and says so. That machine then needs access to
-`github.com`.
+`github.com`. Over plain HTTP it never installs an older version than yours,
+not even with `--allow-downgrade`: the API's word on its version cannot be
+checked there.
 
 ## Manage Your Sessions
 

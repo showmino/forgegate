@@ -23,7 +23,8 @@ your domains. Put your own in their place.
 Each step needs the one before it:
 
 1. **[Install Forge](01-running-your-own-forge.md)** on your Kubernetes
-   cluster with Helm. This gives you the API, the dashboard and the login.
+   cluster, from code: an Argo CD Application in your Git repo. This gives
+   you the API, the dashboard and the login.
 2. **[Install the CLI and log in](02-install-and-login.md)** once the API is
    live. Your Forge serves the CLI of its own version.
 3. **[Write your templates](03-write-your-templates.md)**: a new Forge has

@@ -6,16 +6,15 @@ sidebar_position: 20
 
 Every setting of the chart `oci://ghcr.io/showmino/charts/forge`, as of
 version `0.29.0`. [Install Forge](01-running-your-own-forge.md) walks through
-an install; this page is the reference. Put your settings in a values file
-and pass it to every `helm install` and `helm upgrade`:
+an install; this page is the reference. Your settings go under
+`spec.source.helm.valuesObject` in Forge's Argo CD Application, in your Git
+repo; a change is a commit. They hold only what differs from the defaults,
+and the examples below are complete sets you can copy in. With the Helm CLI
+instead, the same keys go in a values file (`-f forge-values.yaml`).
 
 ```sh
-helm upgrade --install forge oci://ghcr.io/showmino/charts/forge -n forge -f forge-values.yaml
 helm show values oci://ghcr.io/showmino/charts/forge --version 0.29.0   # the defaults, with comments
 ```
-
-A values file holds only what differs from the defaults. The examples below
-are complete files you can start from.
 
 ## Required
 
@@ -273,8 +272,9 @@ nodes, CPU and memory. They need metrics-server.
 
 ## When the Chart Refuses
 
-`helm install` and `helm upgrade` stop before changing anything when a value
-is wrong:
+The chart stops before changing anything when a value is wrong. Argo CD
+shows the message on the Application `forge` (`ComparisonError`); `helm
+install` and `helm upgrade` print it:
 
 | Message | Fix |
 | --- | --- |

@@ -1,38 +1,100 @@
-# forgegate SSA application
+---
+sidebar_position: 0
+---
 
-What forgegate is, in a sentence or two: who uses it and what for.
-These docs live in `docs/` next to the code; Forge shows them in its
-dashboard, a minute after they reach `main`.
+# Forge
 
-| | |
+Forge is an internal developer platform for a GitHub organization. It makes
+new services from templates, keeps the service catalog, runs previews, deploys to staging and
+production, versions every release and records who did what.
+
+You use it in two ways:
+
+- **The `forge` CLI**, documented here, for everything.
+- **The dashboard**, a web page for the same API at your Forge's address
+  (`https://forge.example.com` in these pages). Every page in it shows the CLI
+  command that does the same thing.
+
+The examples use `my-org` for your GitHub organization and `example.com` for
+your domains. Put your own in their place.
+
+## Pick What You Want to Do
+
+| I want to... | Read |
 | --- | --- |
-| Owner | platform-engineering |
-| Repository | <https://github.com/showmino/forgegate> |
-| Stack | Next.js with TypeScript and Tailwind CSS |
-| Started from | the `nextjs` template, v1.7.0 |
+| Understand what Forge is and the words it uses | [What is Forge](00-what-is-forge.md) |
+| Install the CLI and log in | [Install and log in](01-install-and-login.md) |
+| Make a new service | [Create a service](02-create-a-service.md) |
+| Move an app that already exists (Helm, a plain repo) to Forge | [Bring an existing repo](03-bring-an-existing-repo.md) |
+| Know what goes in `forge.yaml` | [forge.yaml reference](04-forge-yaml.md) |
+| Ship a change to staging, then production, or roll back | [Deploy and release](05-deploy-and-release.md) |
+| Choose who can reach a service (internet or private network) | [Addresses and visibility](06-addresses.md) |
+| Set replicas, resources, env vars, secrets, cron jobs | [Run options](07-run-options.md) |
+| Try a branch in its own environment | [Preview environments](08-preview-environments.md) |
+| Follow or stop long-running work | [Operations](09-operations.md) |
+| Find a service, its owner, change or delete it | [The catalog](10-catalog.md) |
+| Write docs for my service | [Service docs](11-service-docs.md) |
+| Give my service a database | [Resources](12-resources.md) |
+| See who changed what | [Audit log](13-audit-log.md) |
+| Write or check a template | [Templates](14-templates.md) |
+| Use Forge in scripts, or fix an error | [Scripting and troubleshooting](15-scripting-and-troubleshooting.md) |
+| Look up a command and its flags | [Command reference](16-command-reference.md) |
+| Run Forge for your own GitHub organization | [Install Forge](17-running-your-own-forge.md) |
+| Write the templates your teams start from | [Write your templates](19-write-your-templates.md) |
+| Look up a setting of the Helm chart | [Chart values](20-chart-values.md) |
 
-## Run it locally
+## How Forge Fits Together
 
-```sh
-npm ci
-npm run dev        # http://localhost:3000
-npm run lint && npm run typecheck && npm test
+```text
+forge CLI ──┐
+            ├──> Forge API ──> GitHub (repos, tags, releases)
+dashboard ──┘        │
+                     └──> forge-deploys (GitOps repo) ──> Argo CD ──> Kubernetes
 ```
 
-## How it ships
+- A service is a GitHub repo in your organization with a
+  `forge.yaml` at its root, plus an entry in the catalog.
+- Its CI builds an image (`ghcr.io/my-org/<service>:<sha>`) and deploys it
+  to **staging** on every push to `main`.
+- A person **promotes** staging to **production**. Forge then tags the commit
+  as a release.
+- Forge never runs `kubectl` against the cluster for you. It writes to the
+  GitOps repo, and Argo CD applies the change.
 
-CI tests every push. On `main` it builds an image and deploys it to staging
-through Forge, as a release candidate. Production is a promote:
+## Who Can Do What
 
-```sh
-forge deploy status forgegate
-forge deploy promote forgegate
-forge env create <name> --service forgegate --ref <branch>   # a preview
-```
+Every service belongs to a team of your GitHub organization (its
+`team` in the catalog). Who may do what follows that team:
 
-## More
+| | Every member | The service's team | Admins |
+| --- | :---: | :---: | :---: |
+| Read: the catalog, deploys, the audit log, docs | ✓ | ✓ | ✓ |
+| Create a service for your own team | | ✓ | ✓ |
+| Update the service; deploy to staging; promote; roll back | | ✓ | ✓ |
+| Previews: create, extend, destroy | | ✓ | ✓ |
+| Cancel the service's operations | | ✓ | ✓ |
+| Resources: plan; apply in staging | | ✓ | ✓ |
+| Delete a service; change its address or claim a domain | | | ✓ |
+| Register an existing repo or point a service at another repo; create for another team; move to another team | | | ✓ |
+| Apply resources in production | | | ✓ |
 
-- [Runbook](runbook.md): what to do when it breaks.
+Admins are the members of the teams named in the chart's `github.adminTeams`,
+by default `my-org:platform-engineering`.
 
-Add pages next to these. `forge docs lint` checks them before a push, and an
-optional `docs:` list in `forge.yaml` sets their order and titles.
+You may also extend, destroy or cancel what you started yourself. A refusal
+says which action it was and which team it needs, and exits 5.
+
+- **A service's own CI** can deploy only that service, only to staging, and
+  only from its default branch. It needs no secret (see
+  [Deploy and release](05-deploy-and-release.md#from-ci)).
+
+`forge auth status` shows your role (admin, or the teams you are in);
+`forge auth can deploy.promote <service>` answers yes or no for one action;
+`forge service get <service>` lists what you may do on that service.
+
+The dashboard follows the same table. Its sidebar shows your role (**Admin**,
+**Team** or **Reader**), and each page shows only the buttons you may use: a
+reader sees no Deploy, Promote or Settings, a team member sees them on the
+team's services only, and Delete, Change address and Change owner are for
+admins. A button you do not see is one the API would refuse. After you move a
+service to another team, the page shows the new team's actions at once.

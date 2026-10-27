@@ -31,11 +31,19 @@ const features: {title: string; text: string}[] = [
   },
 ];
 
-const install = `kubectl create namespace forge
-kubectl -n forge create secret generic forge-github \\
-  --from-file=app-private-key=my-app.private-key.pem \\
-  --from-literal=client-id=<client ID> --from-literal=client-secret=<client secret>
-helm install forge oci://ghcr.io/showmino/charts/forge -n forge -f forge-values.yaml`;
+const install = `# apps/forge.yaml in the repo Argo CD reads
+kind: Application
+metadata: {name: forge, namespace: argocd}
+spec:
+  source:
+    repoURL: oci://ghcr.io/showmino/charts/forge
+    targetRevision: 0.29.0   # an upgrade is a commit
+    path: .
+    helm:
+      valuesObject:
+        github: {org: my-org, appID: "123456"}
+        host: forge.example.com
+  destination: {namespace: forge, server: https://kubernetes.default.svc}`;
 
 const cli = `# from your Forge, so the CLI matches its API
 curl -fLo forge https://forge.example.com/cli/forge-linux-amd64
@@ -47,11 +55,12 @@ const use = `forge create payments --template hello --team billing
 git push                              # CI deploys main to staging
 forge deploy promote payments --yes   # production, tagged v1.0.0`;
 
-const steps: {title: string; text: ReactNode; code: string; link: string; linkText: string}[] = [
+const steps: {title: string; text: ReactNode; code: string; lang: string; link: string; linkText: string}[] = [
   {
     title: '1. Install Forge on Kubernetes',
-    text: 'One Helm chart: the API, the dashboard, the login through your GitHub App, and a database. Add Argo CD for deploys and any ingress controller or Gateway.',
+    text: 'From code: an Argo CD Application in your Git repo installs the API, the dashboard, the login through your GitHub App, and a database. Every change after that, upgrades included, is a commit.',
     code: install,
+    lang: 'yaml',
     link: '/docs/running-your-own-forge',
     linkText: 'Install Forge, step by step',
   },
@@ -59,6 +68,7 @@ const steps: {title: string; text: ReactNode; code: string; link: string; linkTe
     title: '2. Install the CLI',
     text: 'Once the API is live, it serves the CLI of its own version. Point it at your Forge and sign in with GitHub.',
     code: cli,
+    lang: 'bash',
     link: '/docs/install-and-login',
     linkText: 'Install the CLI and log in',
   },
@@ -66,6 +76,7 @@ const steps: {title: string; text: ReactNode; code: string; link: string; linkTe
     title: '3. Create services',
     text: 'Start your templates from the example, then create a service from one. Every page of the dashboard shows the command that does the same thing.',
     code: use,
+    lang: 'bash',
     link: '/docs/write-your-templates',
     linkText: 'Write your templates',
   },
@@ -112,7 +123,7 @@ export default function Home(): ReactNode {
               <div key={step.title} className={styles.step}>
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
-                <CodeBlock language="bash">{step.code}</CodeBlock>
+                <CodeBlock language={step.lang}>{step.code}</CodeBlock>
                 <Link to={step.link}>{step.linkText}</Link>
               </div>
             ))}

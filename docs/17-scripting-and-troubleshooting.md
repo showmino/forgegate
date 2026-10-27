@@ -1,5 +1,5 @@
 ---
-sidebar_position: 15
+sidebar_position: 18
 ---
 
 # Scripting and Troubleshooting
@@ -62,7 +62,7 @@ The first of these that is set wins:
 `forge -v <command>` prints where each setting came from.
 
 `FORGE_TOKEN` replaces your stored login. CI uses it with a token Forge
-issues for the workflow (see [Deploy and release](05-deploy-and-release.md#from-ci));
+issues for the workflow (see [Deploy and release](07-deploy-and-release.md#from-ci));
 do not put a personal session in it.
 
 ## Troubleshooting
@@ -81,11 +81,11 @@ forge version
 | `<you> may not <action> on services/<name>: it needs the team <org>:<team> or an admin` (exit 5) | You are not in the service's team | Ask to be added to the team, or ask a member. `forge auth can <action> <name>` checks first |
 | `<you> may not <action>: only an admin may` (exit 5) | The action is admin only (delete, address, register, production resources, ...) | Ask an admin (by default a member of `<org>:platform-engineering`) |
 | `promoting services/<name> to production is denied by policy: staging is ...` (exit 5) | Staging is not Synced, not Healthy, or still on the deploy before | `forge deploy status <name> --env staging`; fix staging or wait for the deploy, then promote again. A rollback is never refused |
-| `CI token: repository "<org>/<repo>" is not a Forge service: no catalog entry has repo_url ...` | The catalog's repo URL does not match the repo CI runs in | `forge service update <name> --repo https://github.com/<org>/<repo>`; see [Bring an existing repo](03-bring-an-existing-repo.md) |
+| `CI token: repository "<org>/<repo>" is not a Forge service: no catalog entry has repo_url ...` | The catalog's repo URL does not match the repo CI runs in | `forge service update <name> --repo https://github.com/<org>/<repo>`; see [Bring an existing repo](05-bring-an-existing-repo.md) |
 | `field <x> not found in type manifest.<Y>` | A typo in forge.yaml, or a field newer than the API that runs | Fix the name; check with `forge service options check`. A field the API does not know yet must wait for its upgrade |
 | A warning that the CLI and API versions differ | Version skew | `forge upgrade` |
-| HTTP 530 or 404 on a public address | Cloudflare has no route yet, or the deploy did not finish | `forge deploy status`; see [Addresses](06-addresses.md) |
-| `resources are not configured on this Forge API` | Resources are not switched on yet | See [Resources](12-resources.md) |
+| HTTP 530 or 404 on a public address | Cloudflare has no route yet, or the deploy did not finish | `forge deploy status`; see [Addresses](08-addresses.md) |
+| `resources are not configured on this Forge API` | Resources are not switched on yet | See [Resources](14-resources.md) |
 | A command hangs in a pipeline | It is waiting for an operation | `--wait=false`, or `--timeout 10m` |
 
 When you ask for help, include the output of `forge -v <command>`: it has the

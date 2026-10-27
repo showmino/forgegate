@@ -37,9 +37,39 @@ kubectl -n forge create secret generic forge-github \\
   --from-literal=client-id=<client ID> --from-literal=client-secret=<client secret>
 helm install forge oci://ghcr.io/showmino/charts/forge -n forge -f forge-values.yaml`;
 
-const use = `forge create payments --template go-grpc --team billing
+const cli = `# from your Forge, so the CLI matches its API
+curl -fLo forge https://forge.example.com/cli/forge-linux-amd64
+install -m 0755 forge ~/.local/bin/forge
+forge context set my-org --api https://forge.example.com --use
+forge auth login`;
+
+const use = `forge create payments --template hello --team billing
 git push                              # CI deploys main to staging
 forge deploy promote payments --yes   # production, tagged v1.0.0`;
+
+const steps: {title: string; text: ReactNode; code: string; link: string; linkText: string}[] = [
+  {
+    title: '1. Install Forge on Kubernetes',
+    text: 'One Helm chart: the API, the dashboard, the login through your GitHub App, and a database. Add Argo CD for deploys and any ingress controller or Gateway.',
+    code: install,
+    link: '/docs/running-your-own-forge',
+    linkText: 'Install Forge, step by step',
+  },
+  {
+    title: '2. Install the CLI',
+    text: 'Once the API is live, it serves the CLI of its own version. Point it at your Forge and sign in with GitHub.',
+    code: cli,
+    link: '/docs/install-and-login',
+    linkText: 'Install the CLI and log in',
+  },
+  {
+    title: '3. Create services',
+    text: 'Start your templates from the example, then create a service from one. Every page of the dashboard shows the command that does the same thing.',
+    code: use,
+    link: '/docs/write-your-templates',
+    linkText: 'Write your templates',
+  },
+];
 
 export default function Home(): ReactNode {
   return (
@@ -76,25 +106,16 @@ export default function Home(): ReactNode {
           </div>
         </section>
         <section className="container">
-          <div className={styles.split}>
-            <div>
-              <h2>Run it on your cluster</h2>
-              <p>
-                One Helm chart: the API, the dashboard, the login through your GitHub App, and a database. Add Argo CD for
-                deploys and any ingress controller or Gateway.
-              </p>
-              <CodeBlock language="bash">{install}</CodeBlock>
-              <Link to="/docs/running-your-own-forge">Install Forge, step by step</Link>
-            </div>
-            <div>
-              <h2>Use it from the CLI or the dashboard</h2>
-              <p>
-                Everything is a <code>forge</code> command, and every page of the dashboard shows the command that does the
-                same thing.
-              </p>
-              <CodeBlock language="bash">{use}</CodeBlock>
-              <Link to="/docs/create-a-service">Create a service</Link>
-            </div>
+          <h2 className={styles.stepsTitle}>Get started</h2>
+          <div className={styles.steps}>
+            {steps.map((step) => (
+              <div key={step.title} className={styles.step}>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+                <CodeBlock language="bash">{step.code}</CodeBlock>
+                <Link to={step.link}>{step.linkText}</Link>
+              </div>
+            ))}
           </div>
         </section>
       </main>

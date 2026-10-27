@@ -1,5 +1,5 @@
 ---
-sidebar_position: 0.5
+sidebar_position: 1
 ---
 
 # What Is Forge
@@ -68,7 +68,7 @@ forge create ──> repo + CI + catalog entry
 1. **Create.** `forge create` (or the dashboard's Create page) makes the repo
    from a template, registers it in the catalog and starts its CI. An app
    that already exists is registered instead
-   ([Bring an existing repo](03-bring-an-existing-repo.md)).
+   ([Bring an existing repo](05-bring-an-existing-repo.md)).
 2. **Build and deploy to staging.** Every push to `main` builds an image and
    deploys it to staging. CI needs no secret: Forge trusts the repo's own
    GitHub identity, for its own service and for staging only.
@@ -103,4 +103,6 @@ forge create ──> repo + CI + catalog entry
 - **It does not hold your secrets.** They stay in your vault (1Password); forge.yaml only
   names the item and key.
 
-Ready to start? [Install the CLI and log in](01-install-and-login.md).
+Ready to start? [Install Forge](01-running-your-own-forge.md) on your
+cluster, or, if your organization already runs one,
+[install the CLI and log in](02-install-and-login.md).

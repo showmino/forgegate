@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 11
 ---
 
 # Preview Environments
@@ -26,7 +26,7 @@ Forge:
 
 It then prints the URL, `http://<name>.preview.<apps domain>`, for example
 `http://pr-142.preview.apps.example.com`. Who can reach it is the platform's
-choice, as for [internal addresses](06-addresses.md#internal-addresses).
+choice, as for [internal addresses](08-addresses.md#internal-addresses).
 
 Previews must be switched on in the chart: `previews.enabled`, with
 `apps.domain`, `apps.pullSecret` and `apps.routing: gateway`. Otherwise

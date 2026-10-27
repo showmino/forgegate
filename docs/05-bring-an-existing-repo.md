@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 6
 ---
 
 # Bring an Existing Repo
@@ -59,7 +59,7 @@ What does not carry over from Helm, and why:
 
 - **`image`**: Forge uses the image CI built for the deployed commit.
 - **`host`, `gateway`, `istio`, `dnsZones`**: Forge gives every service its
-  address (see [Addresses and visibility](06-addresses.md)). Where the
+  address (see [Addresses and visibility](08-addresses.md)). Where the
   platform offers public domains, use `run.host` or `run.domain` to change it.
 - **Probe timings**: Forge sets them. You choose only the path.
 - **A Prometheus-based autoscaler**: Forge scales on CPU between `replicas`
@@ -83,7 +83,7 @@ forge service get orders-api
 ```
 
 Registering gives the owner team the role Maintain on the repo (see
-[the owner team's access](10-catalog.md#the-owner-teams-access-to-the-repo)).
+[the owner team's access](12-catalog.md#the-owner-teams-access-to-the-repo)).
 
 The catalog entry's repo must be exactly `https://github.com/my-org/<repo>`.
 If CI says:

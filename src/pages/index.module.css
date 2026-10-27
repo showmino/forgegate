@@ -42,9 +42,18 @@
   font-size: 1.1rem;
 }
 
-.split {
+.stepsTitle {
+  margin-bottom: 1.25rem;
+}
+
+.steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-  gap: 2.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 2rem;
   margin-bottom: 4rem;
+}
+
+/* Long commands scroll inside their block instead of widening the column. */
+.step {
+  min-width: 0;
 }

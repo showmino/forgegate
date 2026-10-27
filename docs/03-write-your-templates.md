@@ -1,8 +1,12 @@
 ---
-sidebar_position: 19
+sidebar_position: 4
 ---
 
 # Your Templates
+
+You need Forge installed ([Install Forge](01-running-your-own-forge.md)) and
+the CLI ([Install and log in](02-install-and-login.md)). Then, before anyone
+can create a service, your organization needs templates.
 
 `forge create` makes new services from the templates repo of your
 organization, `<org>/forge-templates` (or the repo your install names in
@@ -12,12 +16,12 @@ runners, pushes its image to ghcr.io and deploys through Forge.
 
 The example is the public repo
 [`showmino/forge-example-templates`](https://github.com/showmino/forge-example-templates).
-[Templates](14-templates.md) has the format in full.
+[Templates](16-templates.md) has the format in full.
 
 ## 1. Copy the Example
 
 The Forge GitHub App must be installed on the repo; with "All repositories"
-(as [Install Forge](17-running-your-own-forge.md) says) it already is.
+(as [Install Forge](01-running-your-own-forge.md) says) it already is.
 
 ```sh
 gh repo clone showmino/forge-example-templates
@@ -77,7 +81,7 @@ apps:
   pullSecret: registry
 ```
 
-Then `helm upgrade` as in [Install Forge](17-running-your-own-forge.md#upgrade).
+Then `helm upgrade` as in [Install Forge](01-running-your-own-forge.md#upgrade).
 Forge checks that an image exists with this Secret and copies it into each
 service's namespace.
 

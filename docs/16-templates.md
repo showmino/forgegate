@@ -1,5 +1,5 @@
 ---
-sidebar_position: 14
+sidebar_position: 17
 ---
 
 # Templates
@@ -21,7 +21,7 @@ forge template get go-grpc@v1.6.0 -o yaml
 ```
 
 Which templates there are is your platform team's choice. To start a
-templates repo, see [Write your templates](19-write-your-templates.md).
+templates repo, see [Write your templates](03-write-your-templates.md).
 
 ## Write or Change a Template
 
@@ -57,7 +57,7 @@ options: [replicas, resources, env, secrets, jobs, autoscaling]
 ```
 
 - `options` lists the run options the create form and `forge create` offer
-  for this template (see [Run options](07-run-options.md)).
+  for this template (see [Run options](09-run-options.md)).
 - `type: file` with `target: <org>/<repo>` makes it a file template: the
   skeleton is added to that repo by pull request.
 

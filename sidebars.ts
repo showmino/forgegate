@@ -1,18 +1,23 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// Two parts: using a Forge, and running one. The ids are the file names in
-// docs/ without their number prefix.
+// "Get started" is the order a new install follows: Forge on Kubernetes
+// first, then the CLI against the live API, then templates and services. The
+// ids are the file names in docs/ without their number prefix, and the
+// numbers follow this order too.
 const sidebars: SidebarsConfig = {
   docs: [
     'index',
     {
       type: 'category',
+      label: 'Get started',
+      collapsed: false,
+      items: ['what-is-forge', 'running-your-own-forge', 'install-and-login', 'write-your-templates', 'create-a-service'],
+    },
+    {
+      type: 'category',
       label: 'Use Forge',
       collapsed: false,
       items: [
-        'what-is-forge',
-        'install-and-login',
-        'create-a-service',
         'bring-an-existing-repo',
         'forge-yaml',
         'deploy-and-release',
@@ -33,7 +38,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Run Forge',
       collapsed: false,
-      items: ['running-your-own-forge', 'write-your-templates', 'chart-values', 'cluster-capacity'],
+      items: ['chart-values', 'cluster-capacity'],
     },
   ],
 };

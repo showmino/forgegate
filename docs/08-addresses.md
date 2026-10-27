@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 9
 ---
 
 # Addresses and Visibility
@@ -118,7 +118,7 @@ In the dashboard: the service's Settings, Danger zone, Change address.
 ## Previews
 
 Preview environments always have an internal address. See
-[Preview environments](08-preview-environments.md).
+[Preview environments](10-preview-environments.md).
 
 ## When an Address Does Not Answer
 

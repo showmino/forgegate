@@ -5,7 +5,7 @@ sidebar_position: 20
 # Chart Values
 
 Every setting of the chart `oci://ghcr.io/showmino/charts/forge`, as of
-version `0.29.0`. [Install Forge](17-running-your-own-forge.md) walks through
+version `0.29.0`. [Install Forge](01-running-your-own-forge.md) walks through
 an install; this page is the reference. Put your settings in a values file
 and pass it to every `helm install` and `helm upgrade`:
 
@@ -132,7 +132,7 @@ deploys:
 | `github.appID` | (required) | Your GitHub App's numeric ID |
 | `github.existingSecret` | `forge-github` | A Secret in the release's namespace with three keys: `app-private-key` (the App's `.pem`), `client-id` and `client-secret` (the login uses them) |
 | `github.adminTeams` | `<org>:platform-engineering` | The teams whose members are admins, comma separated, as `<org>:<team-slug>`. Everyone else who signs in can read, and change the services of their own teams |
-| `github.templatesRepo` | `<org>/forge-templates` | The repo `forge create` scaffolds from (`owner/name`). See [Your Templates](19-write-your-templates.md) |
+| `github.templatesRepo` | `<org>/forge-templates` | The repo `forge create` scaffolds from (`owner/name`). See [Your Templates](03-write-your-templates.md) |
 
 The App needs the organization permission Members (read), or the login sees
 no teams and nobody is an admin.

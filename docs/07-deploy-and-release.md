@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 8
 ---
 
 # Deploy and Release
@@ -151,7 +151,7 @@ forge deploy promote payments --yes --wait=false   # prints the operation id
 forge op watch op_9f2c4a1b0c3d
 ```
 
-See [Operations](09-operations.md).
+See [Operations](11-operations.md).
 
 ## In the Dashboard
 

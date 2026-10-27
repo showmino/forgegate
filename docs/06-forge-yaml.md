@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 ---
 
 # forge.yaml Reference
@@ -83,25 +83,25 @@ port 8080 with the probe on `/healthz`.
 | --- | --- | --- |
 | `port` | The HTTP port the app listens on (also given to it as `$PORT`) | |
 | `health` | The path probed for readiness and liveness. It should answer 200 without calling other services | |
-| `domain` | One of the platform's public domains (`forge domain list`), or `none` for no public address. Refused when the platform has none | [Addresses](06-addresses.md) |
-| `host` | The name before the domain, when it is not the service's own. `@` is not allowed here; use `forge service address` | [Addresses](06-addresses.md) |
-| `staging.public` | `false` keeps staging on its internal address while production stays public | [Addresses](06-addresses.md) |
-| `replicas` | Production's pod count, 1 to 10. Staging runs 1 | [Run options](07-run-options.md) |
-| `autoscaling.max` | Production grows from `replicas` up to this many pods on CPU | [Run options](07-run-options.md) |
-| `resources` | CPU and memory requests and limits per pod | [Run options](07-run-options.md) |
-| `env` | Plain environment variables | [Run options](07-run-options.md) |
-| `secrets` | 1Password items, given to the app as environment variables | [Run options](07-run-options.md) |
-| `jobs` | Cron jobs that run the service's image, with its env and secrets | [Run options](07-run-options.md) |
+| `domain` | One of the platform's public domains (`forge domain list`), or `none` for no public address. Refused when the platform has none | [Addresses](08-addresses.md) |
+| `host` | The name before the domain, when it is not the service's own. `@` is not allowed here; use `forge service address` | [Addresses](08-addresses.md) |
+| `staging.public` | `false` keeps staging on its internal address while production stays public | [Addresses](08-addresses.md) |
+| `replicas` | Production's pod count, 1 to 10. Staging runs 1 | [Run options](09-run-options.md) |
+| `autoscaling.max` | Production grows from `replicas` up to this many pods on CPU | [Run options](09-run-options.md) |
+| `resources` | CPU and memory requests and limits per pod | [Run options](09-run-options.md) |
+| `env` | Plain environment variables | [Run options](09-run-options.md) |
+| `secrets` | 1Password items, given to the app as environment variables | [Run options](09-run-options.md) |
+| `jobs` | Cron jobs that run the service's image, with its env and secrets | [Run options](09-run-options.md) |
 
 ## resources
 
 Things a service needs besides its pods: today, one Postgres database. See
-[Resources](12-resources.md).
+[Resources](14-resources.md).
 
 ## docs
 
 The order and titles of the pages under `docs/`. Pages not listed come after
-the listed ones, in alphabetical order. See [Service docs](11-service-docs.md).
+the listed ones, in alphabetical order. See [Service docs](13-service-docs.md).
 
 ## Rules to Know
 

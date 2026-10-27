@@ -18,30 +18,42 @@ You use it in two ways:
 The examples use `my-org` for your GitHub organization and `example.com` for
 your domains. Put your own in their place.
 
+## Get Started
+
+Each step needs the one before it:
+
+1. **[Install Forge](01-running-your-own-forge.md)** on your Kubernetes
+   cluster with Helm. This gives you the API, the dashboard and the login.
+2. **[Install the CLI and log in](02-install-and-login.md)** once the API is
+   live. Your Forge serves the CLI of its own version.
+3. **[Write your templates](03-write-your-templates.md)**: a new Forge has
+   none, and every service starts from one.
+4. **[Create a service](04-create-a-service.md)** from a template. Its first
+   push deploys it to staging.
+
+New to Forge? Read [What is Forge](00-what-is-forge.md) first. If your
+organization already runs a Forge, start at step 2.
+
 ## Pick What You Want to Do
 
 | I want to... | Read |
 | --- | --- |
-| Understand what Forge is and the words it uses | [What is Forge](00-what-is-forge.md) |
-| Install the CLI and log in | [Install and log in](01-install-and-login.md) |
-| Make a new service | [Create a service](02-create-a-service.md) |
-| Move an app that already exists (Helm, a plain repo) to Forge | [Bring an existing repo](03-bring-an-existing-repo.md) |
-| Know what goes in `forge.yaml` | [forge.yaml reference](04-forge-yaml.md) |
-| Ship a change to staging, then production, or roll back | [Deploy and release](05-deploy-and-release.md) |
-| Choose who can reach a service (internet or private network) | [Addresses and visibility](06-addresses.md) |
-| Set replicas, resources, env vars, secrets, cron jobs | [Run options](07-run-options.md) |
-| Try a branch in its own environment | [Preview environments](08-preview-environments.md) |
-| Follow or stop long-running work | [Operations](09-operations.md) |
-| Find a service, its owner, change or delete it | [The catalog](10-catalog.md) |
-| Write docs for my service | [Service docs](11-service-docs.md) |
-| Give my service a database | [Resources](12-resources.md) |
-| See who changed what | [Audit log](13-audit-log.md) |
-| Write or check a template | [Templates](14-templates.md) |
-| Use Forge in scripts, or fix an error | [Scripting and troubleshooting](15-scripting-and-troubleshooting.md) |
-| Look up a command and its flags | [Command reference](16-command-reference.md) |
-| Run Forge for your own GitHub organization | [Install Forge](17-running-your-own-forge.md) |
-| Write the templates your teams start from | [Write your templates](19-write-your-templates.md) |
-| Look up a setting of the Helm chart | [Chart values](20-chart-values.md) |
+| Move an app that already exists (Helm, a plain repo) to Forge | [Bring an existing repo](05-bring-an-existing-repo.md) |
+| Know what goes in `forge.yaml` | [forge.yaml reference](06-forge-yaml.md) |
+| Ship a change to staging, then production, or roll back | [Deploy and release](07-deploy-and-release.md) |
+| Choose who can reach a service (internet or private network) | [Addresses and visibility](08-addresses.md) |
+| Set replicas, resources, env vars, secrets, cron jobs | [Run options](09-run-options.md) |
+| Try a branch in its own environment | [Preview environments](10-preview-environments.md) |
+| Follow or stop long-running work | [Operations](11-operations.md) |
+| Find a service, its owner, change or delete it | [The catalog](12-catalog.md) |
+| Write docs for my service | [Service docs](13-service-docs.md) |
+| Give my service a database | [Resources](14-resources.md) |
+| See who changed what | [Audit log](15-audit-log.md) |
+| Write or check a template | [Templates](16-templates.md) |
+| Use Forge in scripts, or fix an error | [Scripting and troubleshooting](17-scripting-and-troubleshooting.md) |
+| Look up a command and its flags | [Command reference](18-command-reference.md) |
+| Look up a setting of the Helm chart | [Chart values](19-chart-values.md) |
+| See how full the cluster is | [Cluster capacity](20-cluster-capacity.md) |
 
 ## How Forge Fits Together
 
@@ -86,7 +98,7 @@ says which action it was and which team it needs, and exits 5.
 
 - **A service's own CI** can deploy only that service, only to staging, and
   only from its default branch. It needs no secret (see
-  [Deploy and release](05-deploy-and-release.md#from-ci)).
+  [Deploy and release](07-deploy-and-release.md#from-ci)).
 
 `forge auth status` shows your role (admin, or the teams you are in);
 `forge auth can deploy.promote <service>` answers yes or no for one action;

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 12
 ---
 
 # Operations
@@ -48,7 +48,7 @@ finished operation changes nothing.
 ## How Long They Are Kept
 
 Operations live in the API's memory for 24 hours, and are lost when forge-api
-restarts. The [audit log](13-audit-log.md) keeps the outcome for good.
+restarts. The [audit log](15-audit-log.md) keeps the outcome for good.
 
 ## In the Dashboard
 

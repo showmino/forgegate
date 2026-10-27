@@ -1,8 +1,13 @@
 ---
-sidebar_position: 2
+sidebar_position: 5
 ---
 
 # Create a Service
+
+You need the CLI, logged in to your Forge
+([Install and log in](02-install-and-login.md)), and at least one template
+(`forge template list`; a new Forge has none until you
+[write your templates](03-write-your-templates.md)).
 
 `forge create` makes a new service from a template in one step:
 
@@ -33,7 +38,7 @@ forge template get nextjs@v1.7.0  # one release of it
 A template either makes a new service with its repo, CI, Dockerfile and
 forge.yaml, or (a file template) opens a pull request in another repo (see
 [File templates](#file-templates-a-pull-request-instead-of-a-repo)). To write
-your own, see [Write your templates](19-write-your-templates.md).
+your own, see [Write your templates](03-write-your-templates.md).
 
 ## 2. Pick the Owning Team
 
@@ -55,7 +60,7 @@ characters. It becomes the repo name, the service name and part of its
 address.
 
 Forge shows each step as it happens. It gives the team (`--team`) the role
-Maintain on the new repo (see [the owner team's access](10-catalog.md#the-owner-teams-access-to-the-repo)).
+Maintain on the new repo (see [the owner team's access](12-catalog.md#the-owner-teams-access-to-the-repo)).
 When it ends, the CI of the new repo is already running. About five minutes later the service runs in staging:
 
 ```sh
@@ -123,7 +128,7 @@ the addresses the service will have. An internal service (`--internal`) has no d
 `--internal` is refused. A domain Forge does not offer is refused before
 anything is created; to get another domain, ask your platform team.
 
-You can change this later in forge.yaml. See [Addresses and visibility](06-addresses.md).
+You can change this later in forge.yaml. See [Addresses and visibility](08-addresses.md).
 
 ### Set How It Runs
 
@@ -140,7 +145,7 @@ forge create shop --template nextjs --team web \
   --autoscaling-max 6
 ```
 
-Forge refuses an option the template does not offer. See [Run options](07-run-options.md)
+Forge refuses an option the template does not offer. See [Run options](09-run-options.md)
 for what each one means.
 
 ## File Templates: a Pull Request Instead of a Repo
@@ -171,6 +176,6 @@ there: ask an admin to add you to the team on GitHub.
 ## After Creating
 
 - Clone the repo and work as usual. Every push to `main` deploys to staging.
-- Add docs under `docs/` (see [Service docs](11-service-docs.md)).
+- Add docs under `docs/` (see [Service docs](13-service-docs.md)).
 - When staging looks right, promote it to production (see
-  [Deploy and release](05-deploy-and-release.md)).
+  [Deploy and release](07-deploy-and-release.md)).

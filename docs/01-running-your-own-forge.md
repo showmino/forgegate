@@ -1,12 +1,13 @@
 ---
-sidebar_position: 17
+sidebar_position: 2
 ---
 
 # Install Forge
 
-The rest of this section is for people who use a Forge. This page is for
-running one: Forge for your own GitHub organization, on your own Kubernetes
-cluster, with one `helm install`.
+The first step: Forge for your own GitHub organization, on your own
+Kubernetes cluster, with one `helm install`. The CLI comes after, from the
+running Forge ([Install and log in](02-install-and-login.md)), and then your
+templates and services.
 
 You get the API, the dashboard, the login (Dex, signing in with GitHub) and a
 database, all on one address: the dashboard at `/`, the API at
@@ -51,7 +52,7 @@ Then on the App's page:
 
 - **Your templates repo**, `<org>/forge-templates`: the templates
   `forge create` makes new services from. Start it from the example in
-  [Your Templates](19-write-your-templates.md); [Templates](14-templates.md)
+  [Your Templates](03-write-your-templates.md); [Templates](16-templates.md)
   has the format and `forge template lint`.
 - **Your deploys repo**, `<org>/forge-deploys`, only if you turn on deploys:
   an empty repo with a `main` branch. Forge writes to it; nobody edits it by
@@ -116,7 +117,7 @@ ingress:
 helm install forge oci://ghcr.io/showmino/charts/forge -n forge -f forge-values.yaml
 ```
 
-[Chart Values](20-chart-values.md) lists every setting with its default, and
+[Chart Values](19-chart-values.md) lists every setting with its default, and
 has complete values files for an Ingress, a Gateway with previews and deploys,
 and your own PostgreSQL. `helm show values oci://ghcr.io/showmino/charts/forge`
 prints the defaults with their comments.
@@ -154,7 +155,7 @@ helm test forge -n forge           # the API answers and the login is reachable
 ```
 
 Open `https://forge.example.com` and sign in with GitHub. Then install the
-CLI from your new Forge ([Install and log in](01-install-and-login.md#install-the-cli)),
+CLI from your new Forge ([Install and log in](02-install-and-login.md#install-the-cli)),
 which serves the build of its own version, and log in:
 
 ```sh
@@ -233,3 +234,9 @@ true`. It needs metrics-server.
 | You sign in but nothing is allowed | The App lacks the organization permission Members (read), or you are not in `github.adminTeams` |
 | Pods wait with `CreateContainerConfigError` | The Secret `forge-github` is missing or a key is named differently (`app-private-key`, `client-id`, `client-secret`) |
 | `forge template list` fails or shows nothing | `<org>/forge-templates` (or `github.templatesRepo`) does not exist, has no release tag, or the App is not installed on it |
+
+## Next
+
+1. [Install the CLI and log in](02-install-and-login.md), from your Forge.
+2. [Write your templates](03-write-your-templates.md): a new Forge has none.
+3. [Create a service](04-create-a-service.md).

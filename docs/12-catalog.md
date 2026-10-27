@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 13
 ---
 
 # The Catalog
@@ -84,7 +84,7 @@ forge service register payments --team billing --repo https://github.com/my-org/
 forge service register ledger --team billing --depends-on payments --dry-run
 ```
 
-`forge create` registers new services itself. See [Bring an existing repo](03-bring-an-existing-repo.md)
+`forge create` registers new services itself. See [Bring an existing repo](05-bring-an-existing-repo.md)
 for the whole move.
 
 ## Delete a Service
@@ -100,7 +100,7 @@ deployments with their namespaces, and last its catalog entry. **The GitHub
 repo is kept**: delete or archive it on GitHub if you mean to.
 
 If the delete fails half way, the service stays in the catalog and you can run
-the delete again. A service that still has [resources](12-resources.md) must
+the delete again. A service that still has [resources](14-resources.md) must
 remove them first.
 
 The name is never taken from forge.yaml: you always type it.

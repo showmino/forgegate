@@ -1,8 +1,11 @@
 ---
-sidebar_position: 1
+sidebar_position: 3
 ---
 
 # Install and Log In
+
+You need a running Forge: its API serves the CLI. If your organization has
+none yet, [install Forge](01-running-your-own-forge.md) on Kubernetes first.
 
 ## Install the CLI
 

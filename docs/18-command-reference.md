@@ -846,6 +846,18 @@ forge context current
 FORGE_CONTEXT=prod forge context current -v
 ```
 
+### forge context delete
+
+Remove a context.
+
+```text
+forge context delete <name> [flags]
+```
+
+```sh
+forge context delete staging-eu
+```
+
 ### forge context list
 
 List contexts.

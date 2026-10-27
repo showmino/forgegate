@@ -97,8 +97,13 @@ forge upgrade           # download, verify the checksum, replace the binary
 forge version           # client and server version
 ```
 
-`forge upgrade` needs the HTTPS address of the API. It refuses a plain-HTTP
-address, except `localhost`.
+Over HTTPS, the download is checked against the checksums the API serves.
+When the API has only a plain-HTTP address (not `localhost`), anyone on the
+way could change both, so `forge upgrade` reads the checksums from the release
+on GitHub over HTTPS instead and says so. That machine then needs access to
+`github.com`. Over plain HTTP it never installs an older version than yours,
+not even with `--allow-downgrade`: the API's word on its version cannot be
+checked there.
 
 ## Manage Your Sessions
 
@@ -134,12 +139,16 @@ forge context set local --api http://localhost:8080 --use
 forge context list
 forge context current
 forge context use test
+forge context delete test             # remove a context you no longer need
 forge --context test service list     # one command against another context
 FORGE_CONTEXT=test forge service list # the same, from the environment
 ```
 
 The config is in `~/.config/forge/config.yaml`. It never holds credentials.
-Those are kept per API address.
+Those are kept per API address, so deleting a context keeps its sign-in. To
+end it too, run `forge auth logout --context <name>` before you delete the
+context, or `forge auth logout --api-url <url>` after; `forge context delete`
+names that command when a sign-in is left behind.
 
 ## Shell Completion
 

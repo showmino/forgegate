@@ -6,18 +6,36 @@ sidebar_position: 1
 
 ## Install the CLI
 
-Download a release from [GitHub](https://github.com/showmino/forge/releases).
-Use the version your Forge runs (`forge version` shows both later):
+Download the CLI from your Forge. It serves the build of its own version, so
+the CLI and the API always match. The examples use `https://forge.example.com`,
+the address of your Forge's dashboard.
+
+On Linux (amd64; for arm64 use `forge-linux-arm64`):
 
 ```sh
-# Linux, amd64. Others: linux_arm64, darwin_amd64, darwin_arm64 (.tar.gz),
-# windows_amd64 and windows_arm64 (.zip).
-VERSION=0.29.0
-curl -fLO https://github.com/showmino/forge/releases/download/v$VERSION/forge_${VERSION}_linux_amd64.tar.gz
-tar -xzf forge_${VERSION}_linux_amd64.tar.gz forge
+curl -fLo forge https://forge.example.com/cli/forge-linux-amd64
 install -m 0755 forge ~/.local/bin/forge     # anywhere on your PATH
 forge version --client
 ```
+
+On macOS and Windows, the archive's name has the version. Your Forge says
+which version it runs in the header `Forge-Server-Version`:
+
+```sh
+FORGE=https://forge.example.com
+VERSION=$(curl -fsSI "$FORGE/cli/forge-linux-amd64" | tr -d '\r' | awk -F': ' 'tolower($1)=="forge-server-version" {print $2}')
+# macOS, Apple silicon. Intel Macs: darwin_amd64.
+curl -fLO "$FORGE/cli/releases/v$VERSION/forge_${VERSION}_darwin_arm64.tar.gz"
+tar -xzf "forge_${VERSION}_darwin_arm64.tar.gz" forge
+sudo install -m 0755 forge /usr/local/bin/forge
+```
+
+On Windows the archive is `forge_<version>_windows_amd64.zip` (or
+`windows_arm64`), with `forge.exe` inside.
+
+Your Forge only serves its own version. Every release is also on
+[GitHub](https://github.com/showmino/forge/releases), for example when your
+Forge is not reachable yet.
 
 ## Point It at Your Forge
 

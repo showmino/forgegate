@@ -153,8 +153,9 @@ kubectl -n forge get pods          # dex, forge-api, forge-db-0, forge-web: Runn
 helm test forge -n forge           # the API answers and the login is reachable
 ```
 
-Open `https://forge.example.com` and sign in with GitHub. Then from the CLI
-(install it from the [releases](https://github.com/showmino/forge/releases)):
+Open `https://forge.example.com` and sign in with GitHub. Then install the
+CLI from your new Forge ([Install and log in](01-install-and-login.md#install-the-cli)),
+which serves the build of its own version, and log in:
 
 ```sh
 forge context set mine --api https://forge.example.com --use

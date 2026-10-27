@@ -269,7 +269,7 @@ nodes, CPU and memory. They need metrics-server.
 
 | Value | Default | What |
 | --- | --- | --- |
-| `cliRepo` | `showmino/forge` | The GitHub releases `forge upgrade` and `/cli/` download the CLI from (`owner/name`) |
+| `cliRepo` | `showmino/forge` | The GitHub releases that `forge upgrade` and `/cli/releases/` download the CLI from (`owner/name`). The Linux builds at `/cli/forge-linux-<arch>` are in the API's image |
 
 ## When the Chart Refuses
 

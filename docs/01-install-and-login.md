@@ -77,7 +77,7 @@ forge version           # client and server version
 ```
 
 `forge upgrade` needs the HTTPS address of the API. It refuses a plain-HTTP
-address.
+address, except `localhost`.
 
 ## Manage Your Sessions
 

@@ -67,8 +67,8 @@ apply again. `forge resource get` shows the live health.
 ## Plans From CI
 
 A service's own CI may plan its resources (for example to show the plan in a
-pull request); it may not apply them. Applying is for people on the owning
-team, or admins.
+pull request); it may not apply them. Applying in staging is for people on the owning
+team, and in production for admins.
 
 ## See What Exists
 

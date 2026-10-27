@@ -40,7 +40,7 @@ run:
   env:
     LOG_LEVEL: info
   secrets:
-    - name: stripe                # becomes the Kubernetes Secret stripe-1password
+    - name: stripe                # becomes the Kubernetes Secret stripe-secret
       item: vaults/Apps/items/payments-stripe
       env: {STRIPE_KEY: credential}   # variable: field of the item
   jobs:

@@ -81,7 +81,7 @@ has a database. Never put a secret in `env`: use `secrets`.
 ```yaml
 run:
   secrets:
-    - name: stripe                           # the Secret is called stripe-1password
+    - name: stripe                           # the Secret is called stripe-secret
       item: vaults/Apps/items/payments-stripe
       env:
         STRIPE_KEY: credential               # variable: field of the item

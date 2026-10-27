@@ -46,9 +46,9 @@ fullest first:
 
 ```text
 NODE       ROLES                CONDITION        SCHEDULABLE   CPU              MEMORY            DISK               PODS
-srv-cron   worker               Ready            yes           31% of 8 cores   25% of 16.0 GiB   10% of 200.0 GiB   2/110
-srv-kube   control-plane,etcd   Ready            yes           25% of 4 cores   75% of 8.0 GiB    75% of 100.0 GiB   1/110
-srv-lab    worker               MemoryPressure   no            13% of 4 cores   88% of 8.0 GiB    90% of 50.0 GiB    1/110
+node-a     worker               Ready            yes           31% of 8 cores   25% of 16.0 GiB   10% of 200.0 GiB   2/110
+node-b     control-plane,etcd   Ready            yes           25% of 4 cores   75% of 8.0 GiB    75% of 100.0 GiB   1/110
+node-c     worker               MemoryPressure   no            13% of 4 cores   88% of 8.0 GiB    90% of 50.0 GiB    1/110
 
 VOLUME                     SERVICE    ENV          USED
 payments-production/data   payments   production   90% of 10.0 GiB

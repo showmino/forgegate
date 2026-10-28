@@ -37,7 +37,7 @@ metadata: {name: forge, namespace: argocd}
 spec:
   source:
     repoURL: oci://ghcr.io/showmino/charts/forge
-    targetRevision: 0.32.0   # an upgrade is a commit
+    targetRevision: 0.33.0   # an upgrade is a commit
     path: .
     helm:
       valuesObject:

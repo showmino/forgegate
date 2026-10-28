@@ -11,9 +11,10 @@ it, and every change after that, an upgrade included, is a commit. The CLI comes
 running Forge ([Install and log in](02-install-and-login.md)), and then your
 templates and services.
 
-You get the API, the dashboard, the login (Dex, signing in with GitHub) and a
-database, all on one address: the dashboard at `/`, the API at
-`/forge.v1.*` and `/cli/`, the login at `/dex`.
+You get the API, the dashboard and the login (Dex, signing in with GitHub),
+all on one address: the dashboard at `/`, the API at `/forge.v1.*` and
+`/cli/`, the login at `/dex`. Forge keeps its data in a PostgreSQL database
+you run, outside Forge's own install: removing Forge never removes its data.
 
 ## What you need
 
@@ -26,6 +27,8 @@ database, all on one address: the dashboard at `/`, the API at
 - **Argo CD 3.1 or later** in the namespace `argocd`, which installs Forge
   from its chart and later deploys your services.
 - **A Git repo** for the cluster's configuration, which Argo CD reads.
+- **A PostgreSQL server** for Forge's data: a managed one, or one in your
+  cluster in another namespace (step 3 shows one with CloudNativePG).
 
 For previews you also need a Gateway API implementation (see the end of this
 page).
@@ -68,7 +71,66 @@ Variables). Your services' CI uses it to deploy through Forge. On GitHub
 Free, private repositories cannot read organization variables; the example
 template takes the address as a parameter instead.
 
-## 3. Make the Secrets
+## 3. Make Forge's Database
+
+Forge needs two databases on one PostgreSQL server, owned by one user:
+`forge` for the API and `dex` for the login's sessions. Run it **outside
+Forge's install**: in another namespace, from an Argo CD Application of its
+own, or as a managed server. Then deleting Forge's namespace or its
+Application, by mistake or to reinstall, leaves the data where it is. Back it
+up like any database you can't lose.
+
+With [CloudNativePG](https://cloudnative-pg.io) (the operator must be
+installed), in a namespace `databases`: first the database user's password,
+
+```sh
+kubectl create namespace databases
+password=$(openssl rand -hex 24)
+kubectl -n databases create secret generic forge-db-credentials \
+  --type=kubernetes.io/basic-auth \
+  --from-literal=username=forge --from-literal=password="$password"
+```
+
+then the cluster and the login's database, in your repo with an Application
+of their own (not Forge's):
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: forge-db
+  namespace: databases
+spec:
+  instances: 2
+  storage:
+    size: 5Gi
+  bootstrap:
+    initdb:
+      database: forge
+      owner: forge
+      secret:
+        name: forge-db-credentials
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: forge-db-dex
+  namespace: databases
+spec:
+  name: dex
+  owner: forge
+  cluster:
+    name: forge-db
+```
+
+Its address is `forge-db-rw.databases.svc`. CloudNativePG's
+[Barman Cloud plugin](https://cloudnative-pg.io/plugin-barman-cloud/) backs it
+up to object storage.
+
+With a managed server, create the user `forge` and the databases `forge` and
+`dex`, owned by it.
+
+## 4. Make the Secrets
 
 Secrets do not go in Git, so you make them once, before Argo CD installs
 Forge. The namespace, and the Secret with the GitHub App's credentials:
@@ -81,15 +143,15 @@ kubectl -n forge create secret generic forge-github \
   --from-literal=client-secret=<the client secret>
 ```
 
-And the password of Forge's database. Argo CD renders the chart without
-reading the cluster, so the chart cannot keep a password it made itself; you
-make it instead:
+And how Forge reaches its database: the user's password (from step 3; with
+a managed server, set `password` to the password you gave the user `forge`),
+and the API's connection string with the same password (URL-escaped, if it
+has characters such as `@ : / ? # %`):
 
 ```sh
-password=$(openssl rand -hex 24)
-kubectl -n forge create secret generic forge-db \
+kubectl -n forge create secret generic forge-database \
   --from-literal=password="$password" \
-  --from-literal=uri="postgres://forge:$password@forge-db.forge.svc:5432/forge?sslmode=disable"
+  --from-literal=uri="postgres://forge:$password@forge-db-rw.databases.svc:5432/forge?sslmode=require"
 unset password
 ```
 
@@ -97,7 +159,7 @@ If your cluster gets its secrets from a secret manager (External Secrets,
 Sealed Secrets, the 1Password operator), make the same two Secrets with it
 instead, and they are in code too.
 
-## 4. Install Forge from Your Repo
+## 5. Install Forge from Your Repo
 
 Add this file to the repo Argo CD reads, for example as
 `apps/forge.yaml`, with your organization, App ID and address:
@@ -112,7 +174,7 @@ spec:
   project: default
   source:
     repoURL: oci://ghcr.io/showmino/charts/forge
-    targetRevision: 0.31.0         # Forge's version: the API, dashboard and deploy chart
+    targetRevision: 0.32.0         # Forge's version: the API, dashboard and deploy chart
     path: .
     helm:
       releaseName: forge
@@ -131,8 +193,8 @@ spec:
           tls:
             secretName: forge-tls
         database:
-          bundled:
-            existingSecret: forge-db
+          existingSecret: forge-database
+          host: forge-db-rw.databases.svc
   destination:
     server: https://kubernetes.default.svc
     namespace: forge
@@ -164,26 +226,11 @@ Everyone in the organization can sign in. Members of the teams in
 are admins: they may do everything, for example promote to production. The
 others change the services of their own teams.
 
-### The database
-
-The default is one PostgreSQL pod with a 5 GiB volume, using the Secret
-`forge-db` you made above. Deleting the Application keeps the volume. It has
-**no backups**. For data you can't lose:
-
-- `database.mode: external`: your own PostgreSQL. Create a Secret with `uri`
-  (the connection string) and `password`, create a second database `dex` on
-  the same server for the login, and set `database.external.existingSecret`
-  and `database.external.host`.
-- `database.mode: cloudnativepg`: a CloudNativePG cluster (the operator must
-  be installed), with backups through its plugins
-  (`database.cloudnativepg.plugins`). It makes its own password, so the
-  Secret `forge-db` is not needed.
-
-## 5. Check It
+## 6. Check It
 
 ```sh
 kubectl -n argocd get application forge   # Synced, Healthy
-kubectl -n forge get pods                 # dex, forge-api, forge-db-0, forge-web: Running
+kubectl -n forge get pods                 # dex, forge-api, forge-web: Running
 ```
 
 The API answers, and the login serves its discovery document:
@@ -216,18 +263,40 @@ deployed with move together. A setting changes the same way, in
 The [releases](https://github.com/showmino/forge/releases) list the
 versions.
 
+### From a chart before 0.32.0
+
+Before 0.32.0 the chart could run the database itself, inside Forge's
+install: `database.mode: bundled` (the default) or `cloudnativepg`. 0.32.0
+refuses those values, or asks for `database.host` if you never set any, so
+Argo CD stops at a `ComparisonError` and removes nothing until you change
+them. The sync after that change deletes the old database's objects, so first:
+
+1. Make a database outside Forge's install (step 3).
+2. Copy the data: `pg_dump` the databases `forge` and `dex` from the old one,
+   and `pg_restore --no-owner --role=forge` them into the new one.
+3. Keep the old database: annotate its objects (the StatefulSet `forge-db`
+   and the Secret `forge-db`, or the CloudNativePG `Cluster` `forge-db`, whose
+   deletion also deletes its volumes) with
+   `argocd.argoproj.io/sync-options: Prune=false,Delete=false`. Installed with
+   the Helm CLI, annotate them `helm.sh/resource-policy=keep` instead.
+4. Make the Secret `forge-database` (step 4), set `database.existingSecret`
+   and `database.host`, change `targetRevision`, commit and push.
+5. Once Forge works on the new database, delete the old one.
+
+With `database.mode: external`, only the values move: `database.external.*`
+becomes `database.*`, and `database.mode` goes.
+
 ## Try It Without Argo CD
 
 To try Forge on a cluster without Argo CD, the same chart installs with the
 Helm CLI. Then nothing records what runs, and deploys stay off until you add
 Argo CD, so move to an Application before you rely on it.
 
-Make the Secret `forge-github` as in step 3 (the chart makes `forge-db`
-itself here), put the `valuesObject` from step 4 in `forge-values.yaml`
-without the `database` part, and:
+Make the database (step 3) and the Secrets (step 4), put the `valuesObject`
+from step 5 in `forge-values.yaml`, and:
 
 ```sh
-helm install forge oci://ghcr.io/showmino/charts/forge --version 0.31.0 -n forge -f forge-values.yaml
+helm install forge oci://ghcr.io/showmino/charts/forge --version 0.32.0 -n forge -f forge-values.yaml
 helm test forge -n forge          # the API answers and the login is reachable
 ```
 
@@ -288,8 +357,10 @@ true`. It needs metrics-server.
 | GitHub says "The redirect_uri is not associated with this application" | The App's callback URL is not exactly `https://<host>/dex/callback` |
 | You sign in but nothing is allowed | The App lacks the organization permission Members (read), or you are not in `github.adminTeams` |
 | The Application `forge` shows `ComparisonError` and cannot fetch the chart | Argo CD is older than 3.1 (it has no `oci://` sources), or it cannot reach `ghcr.io` |
-| Pods wait with `CreateContainerConfigError` | A Secret from step 3 is missing or a key is named differently: `forge-github` (`app-private-key`, `client-id`, `client-secret`) or `forge-db` (`password`, `uri`) |
-| `forge-api` or `dex` cannot log in to the database | The password in `forge-db` changed after the database was first made; the database keeps the first one |
+| Pods wait with `CreateContainerConfigError` | A Secret from step 4 is missing or a key is named differently: `forge-github` (`app-private-key`, `client-id`, `client-secret`) or `forge-database` (`password`, `uri`) |
+| `forge-api` or `dex` cannot log in to the database | The password in `forge-database` is not the database user's, or `uri` has it without URL-escaping |
+| `dex` fails with `database "dex" does not exist` | Create the login's database (`database.loginDatabase`, default `dex`), owned by the same user |
+| The Application `forge` shows `ComparisonError` with "database.… is gone" | Values of a chart before 0.32.0: see [From a chart before 0.32.0](#from-a-chart-before-0320) |
 | `forge template list` fails or shows nothing | `<org>/forge-templates` (or `github.templatesRepo`) does not exist, has no release tag, or the App is not installed on it |
 
 ## Next

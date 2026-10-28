@@ -240,6 +240,7 @@ Both are off by default. Both need `apps.domain` and `apps.pullSecret`.
 | `deploys.repo` | `<org>/forge-deploys` | An empty repo with a `main` branch that the GitHub App can write to |
 | `deploys.chart` | `oci://ghcr.io/showmino/forge-chart` | The chart services are deployed with; it is public |
 | `deploys.chartRevision` | `""` | Empty is this chart's `appVersion`. Changing it redeploys every service |
+| `deploys.excludedNamespaces` | `[]` | Existing namespaces named like `*-staging` or `*-production` that are not Forge's: Argo CD never deploys a service into them |
 | `apps.publicDomains` | `[]` | Public addresses: domains a service may take its address under (`forge create --domain`, `run.domain` in `forge.yaml`), as `[{domain: example.com, zone: example-com}]`. The first is the default. The chart's Gateway gets a listener for each domain and its root; send the domains' hosts to it. With each such deploy Forge writes a DNS record (a kro `CloudflareRecordsApplication`) in the zone named by `zone`. Needs deploys and `apps.routing: gateway` |
 | `apps.dnsTunnel` | `production` | The tunnel those DNS records point at |
 | `argocdURL` | `""` | Argo CD's web address, to link a deployment to its Application (optional) |
@@ -311,6 +312,7 @@ install` and `helm upgrade` print it:
 | `apps.publicDomains needs deploys.enabled` (or `apps.routing gateway`) | Public addresses are listeners on the chart's Gateway, for deploys |
 | `apps.publicDomains: ... is not a domain`, `the zone of ... must be a name` | Lower case, like `{domain: example.com, zone: example-com}`; a zone cannot end in `-root` |
 | `gateway.appsGateway needs the chart's Gateway` | Turn on previews, or deploys with `apps.routing: gateway` |
+| `deploys.excludedNamespaces: ... is not a namespace name` | Lower case, like `docs-staging` |
 | `clusters.remote needs clusters.enabled` | Turn on `clusters.enabled` |
 | `apps.ingress.annotations must not contain {{` | Argo CD's ApplicationSet would read it as a template; remove it |
 
@@ -550,6 +552,9 @@ deploys:
   chart: oci://ghcr.io/showmino/forge-chart
   # Empty: this chart's appVersion. Changing it redeploys every service.
   chartRevision: ""
+  # Existing namespaces named like *-staging or *-production that are not
+  # Forge's: Argo CD never deploys a service into them.
+  excludedNamespaces: []
 
 # Resources: `forge resource` plans and applies a service's databases
 # (CloudNativePG clusters, the operator must be installed) with OpenTofu Jobs

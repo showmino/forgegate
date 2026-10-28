@@ -143,9 +143,10 @@ kubectl -n forge create secret generic forge-github \
   --from-literal=client-secret=<the client secret>
 ```
 
-And how Forge reaches its database: the user's password, and the API's
-connection string with the same password (URL-escaped, if it has characters
-such as `@ : / ? # %`):
+And how Forge reaches its database: the user's password (from step 3; with
+a managed server, set `password` to the password you gave the user `forge`),
+and the API's connection string with the same password (URL-escaped, if it
+has characters such as `@ : / ? # %`):
 
 ```sh
 kubectl -n forge create secret generic forge-database \
@@ -264,17 +265,20 @@ versions.
 
 ### From a chart before 0.32.0
 
-Before 0.32.0 the chart could run the database itself
-(`database.mode: bundled` or `cloudnativepg`), inside Forge's install. 0.32.0
-refuses those values, so Argo CD stops at a `ComparisonError` and removes
-nothing until you change them:
+Before 0.32.0 the chart could run the database itself, inside Forge's
+install: `database.mode: bundled` (the default) or `cloudnativepg`. 0.32.0
+refuses those values, or asks for `database.host` if you never set any, so
+Argo CD stops at a `ComparisonError` and removes nothing until you change
+them. The sync after that change deletes the old database's objects, so first:
 
 1. Make a database outside Forge's install (step 3).
 2. Copy the data: `pg_dump` the databases `forge` and `dex` from the old one,
    and `pg_restore --no-owner --role=forge` them into the new one.
-3. Keep the old database out of the next sync's prune: annotate it
-   (the `StatefulSet` `forge-db`, or the CloudNativePG `Cluster` `forge-db`)
-   with `argocd.argoproj.io/sync-options: Prune=false`.
+3. Keep the old database: annotate its objects (the StatefulSet `forge-db`
+   and the Secret `forge-db`, or the CloudNativePG `Cluster` `forge-db`, whose
+   deletion also deletes its volumes) with
+   `argocd.argoproj.io/sync-options: Prune=false,Delete=false`. Installed with
+   the Helm CLI, annotate them `helm.sh/resource-policy=keep` instead.
 4. Make the Secret `forge-database` (step 4), set `database.existingSecret`
    and `database.host`, change `targetRevision`, commit and push.
 5. Once Forge works on the new database, delete the old one.

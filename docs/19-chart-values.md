@@ -203,7 +203,7 @@ shows one with CloudNativePG, and [what Forge needs from it](01-running-your-own
 | `database.port` | `5432` | The server's port |
 | `database.user` | `forge` | The user, who also owns the login's database |
 | `database.loginDatabase` | `dex` | The login keeps its sessions in this second database on the same server. Create it before the install |
-| `database.sslMode` | `require` | The login's `sslmode`: `disable`, `require`, `verify-ca` or `verify-full`. The API takes its own from `uri`; use the same |
+| `database.sslMode` | `require` | The login's `sslmode`: `disable`, `require` (encrypted; the certificate is checked only against `database.caSecret`'s CA when that is set), `verify-ca` or `verify-full`. The API takes its own from `uri`; use the same. With `database.caSecret`, a `uri` without `sslmode` gets this one |
 | `database.caSecret` | `""` | A Secret with `ca.crt`, the CA of the server's certificate, for `verify-ca` and `verify-full` when the system's trusted roots don't cover it (a private CA). Mounted for the API (`PGSSLROOTCERT`) and the login |
 
 Before 0.32.0 the chart could run the database itself (`database.mode`,
@@ -444,10 +444,11 @@ database:
   port: 5432
   user: forge
   loginDatabase: dex
-  # The login's sslmode: disable, require (encrypted, the certificate is not
-  # checked), verify-ca or verify-full (checked against caSecret's CA, or the
-  # system's trusted roots without it). The API takes its sslmode from "uri";
-  # use the same.
+  # The login's sslmode: disable, require (encrypted; the certificate is
+  # checked only against caSecret's CA when that is set), verify-ca or
+  # verify-full (checked against caSecret's CA, or the system's trusted roots
+  # without it). The API takes its sslmode from "uri"; use the same. With
+  # caSecret, a uri without sslmode gets this one.
   sslMode: require
   # A Secret in Forge's namespace with "ca.crt": the CA that signed the
   # server's certificate, when the system's roots don't (a private CA, such

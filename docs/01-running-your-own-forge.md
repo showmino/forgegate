@@ -143,7 +143,8 @@ whoever runs it. Forge needs:
   default) from the pods `forge-api` and `dex`. The chart makes no egress
   NetworkPolicy; if your namespaces deny egress by default, allow this one.
 - **TLS:** `sslmode=require` in `uri` and `database.sslMode: require` encrypt
-  the connection. `verify-full` also checks the server's certificate: against
+  the connection (and check the certificate against `database.caSecret`'s CA
+  when one is set). `verify-full` also checks the server's name: against
   the system's trusted roots (most managed servers), or against your own CA
   in a Secret with the key `ca.crt`, named by `database.caSecret`. For
   CloudNativePG, copy `ca.crt` (only that key: the Secret also holds the CA's

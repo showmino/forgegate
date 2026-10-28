@@ -73,12 +73,34 @@ template takes the address as a parameter instead.
 
 ## 3. Make Forge's Database
 
-Forge needs two databases on one PostgreSQL server, owned by one user:
-`forge` for the API and `dex` for the login's sessions. Run it **outside
-Forge's install**: in another namespace, from an Argo CD Application of its
-own, or as a managed server. Then deleting Forge's namespace or its
-Application, by mistake or to reinstall, leaves the data where it is. Back it
-up like any database you can't lose.
+Forge requires a PostgreSQL database that you provision and manage
+separately. Forge does not install or manage a PostgreSQL instance as part of
+its core deployment.
+
+Before installing Forge:
+
+1. Provision a PostgreSQL database using your preferred managed database
+   service or self-hosted PostgreSQL deployment.
+2. Create the two databases Forge needs, `forge` for Forge and `dex` for its
+   authentication service, Dex, and one database user that owns both.
+3. Configure the database connection credentials using Kubernetes Secrets or
+   your existing secrets-management solution (step 4).
+4. Ensure the Forge namespace can reach the database over the network and
+   that TLS is configured appropriately.
+
+Configure Forge to use your external database through the chart's database
+settings. Refer to [Chart Values](19-chart-values.md#database) for the
+supported configuration fields and Secret format.
+
+Forge does not provision database storage, manage database backups, or
+provide database high availability. These responsibilities belong to your
+database provider or database operator. Running the database outside Forge's
+install also means that deleting Forge's namespace or Application leaves the
+data where it is.
+
+Before upgrading Forge, review the
+[release notes](https://github.com/showmino/forge/releases) for any database
+schema migrations or configuration changes.
 
 With [CloudNativePG](https://cloudnative-pg.io) (the operator must be
 installed), in a namespace `databases`: first the database user's password,
@@ -132,8 +154,7 @@ With a managed server, create the user `forge` and the databases `forge` and
 
 ### What Forge Needs From It
 
-Forge does not provision, back up or watch its database: that is up to
-whoever runs it. Forge needs:
+Forge needs:
 
 - **PostgreSQL 18.** It is the version Forge is tested with; older versions
   are not tested.

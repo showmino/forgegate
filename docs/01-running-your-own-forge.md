@@ -130,6 +130,43 @@ up to object storage.
 With a managed server, create the user `forge` and the databases `forge` and
 `dex`, owned by it.
 
+### What Forge Needs From It
+
+Forge does not provision, back up or watch its database: that is up to
+whoever runs it. Forge needs:
+
+- **PostgreSQL 18.** It is the version Forge is tested with; older versions
+  are not tested.
+- **One user that owns both databases.** forge-api creates and changes its
+  tables, and Dex its own; neither needs a superuser.
+- **The network:** Forge's namespace reaches the server's port (5432 by
+  default) from the pods `forge-api` and `dex`. The chart makes no egress
+  NetworkPolicy; if your namespaces deny egress by default, allow this one.
+- **TLS:** `sslmode=require` in `uri` and `database.sslMode: require` encrypt
+  the connection (and check the certificate against `database.caSecret`'s CA
+  when one is set). `verify-full` also checks the server's name: against
+  the system's trusted roots (most managed servers), or against your own CA
+  in a Secret with the key `ca.crt`, named by `database.caSecret`. For
+  CloudNativePG, copy `ca.crt` (only that key: the Secret also holds the CA's
+  private key) from its Secret `<cluster>-ca` into a Secret in Forge's
+  namespace.
+- **Connections:** forge-api keeps a small pool (at most 4 connections, or the
+  number of CPUs if more); `pool_max_conns` in `uri` changes it. Behind
+  PgBouncer, use session pooling: migrations hold a session lock.
+
+forge-api migrates its database when it starts, one migration per
+transaction, behind a lock so that two never run at once. Migrations only go
+forward; nothing undoes them. Back the database up before an upgrade: going
+back to an older Forge then means restoring the database from before it. Dex
+migrates its own database the same way.
+
+Back both databases up, from the same point in time. To recover, restore
+them, then restart Forge (`kubectl -n forge rollout restart deploy/forge-api
+deploy/dex`). Sign-ins made after the backup are lost; everyone else stays
+signed in. High availability and monitoring are the database's too: Forge
+waits about a minute for its database when it starts, then stops and
+restarts.
+
 ## 4. Make the Secrets
 
 Secrets do not go in Git, so you make them once, before Argo CD installs
@@ -360,6 +397,8 @@ true`. It needs metrics-server.
 | Pods wait with `CreateContainerConfigError` | A Secret from step 4 is missing or a key is named differently: `forge-github` (`app-private-key`, `client-id`, `client-secret`) or `forge-database` (`password`, `uri`) |
 | `forge-api` or `dex` cannot log in to the database | The password in `forge-database` is not the database user's, or `uri` has it without URL-escaping |
 | `dex` fails with `database "dex" does not exist` | Create the login's database (`database.loginDatabase`, default `dex`), owned by the same user |
+| `forge-api` or `dex` fails with `certificate signed by unknown authority` | With `verify-full`, the server's CA is not a trusted root: put it in a Secret with the key `ca.crt` and name it in `database.caSecret` |
+| `forge-api` keeps logging "waiting for the database", then restarts | It cannot reach the server: check `uri`'s host and port, and that Forge's namespace may connect to it |
 | The Application `forge` shows `ComparisonError` with "database.… is gone" | Values of a chart before 0.32.0: see [From a chart before 0.32.0](#from-a-chart-before-0320) |
 | `forge template list` fails or shows nothing | `<org>/forge-templates` (or `github.templatesRepo`) does not exist, has no release tag, or the App is not installed on it |
 

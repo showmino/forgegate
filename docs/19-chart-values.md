@@ -194,7 +194,7 @@ Forge keeps its data in a PostgreSQL server you run, outside Forge's install
 removing Forge never removes its data. The chart runs no database. It needs
 two databases on that server owned by one user: the API's (named in `uri`)
 and the login's (`database.loginDatabase`). [Install Forge](01-running-your-own-forge.md#3-make-forges-database)
-shows one with CloudNativePG.
+shows one with CloudNativePG, and [what Forge needs from it](01-running-your-own-forge.md#what-forge-needs-from-it): the version, permissions, network, TLS and backups.
 
 | Value | Default | What |
 | --- | --- | --- |
@@ -203,7 +203,8 @@ shows one with CloudNativePG.
 | `database.port` | `5432` | The server's port |
 | `database.user` | `forge` | The user, who also owns the login's database |
 | `database.loginDatabase` | `dex` | The login keeps its sessions in this second database on the same server. Create it before the install |
-| `database.sslMode` | `require` | The login's `sslmode` |
+| `database.sslMode` | `require` | The login's `sslmode`: `disable`, `require`, `verify-ca` or `verify-full`. The API takes its own from `uri`; use the same |
+| `database.caSecret` | `""` | A Secret with `ca.crt`, the CA of the server's certificate, for `verify-ca` and `verify-full` when the system's trusted roots don't cover it (a private CA). Mounted for the API (`PGSSLROOTCERT`) and the login |
 
 Before 0.32.0 the chart could run the database itself (`database.mode`,
 `database.bundled`, `database.cloudnativepg`) and had these values under
@@ -443,7 +444,16 @@ database:
   port: 5432
   user: forge
   loginDatabase: dex
+  # The login's sslmode: disable, require (encrypted, the certificate is not
+  # checked), verify-ca or verify-full (checked against caSecret's CA, or the
+  # system's trusted roots without it). The API takes its sslmode from "uri";
+  # use the same.
   sslMode: require
+  # A Secret in Forge's namespace with "ca.crt": the CA that signed the
+  # server's certificate, when the system's roots don't (a private CA, such
+  # as CloudNativePG's own). The API gets it as PGSSLROOTCERT, the login as its
+  # caFile.
+  caSecret: ""
 
 # Where your services' CI pushes their images: a registry host and an
 # optional path, no scheme. Deploys and previews run

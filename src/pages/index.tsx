@@ -37,12 +37,13 @@ metadata: {name: forge, namespace: argocd}
 spec:
   source:
     repoURL: oci://ghcr.io/showmino/charts/forge
-    targetRevision: 0.31.0   # an upgrade is a commit
+    targetRevision: 0.32.0   # an upgrade is a commit
     path: .
     helm:
       valuesObject:
         github: {org: my-org, appID: "123456"}
         host: forge.example.com
+        database: {existingSecret: forge-database, host: db.example.com}
   destination: {namespace: forge, server: https://kubernetes.default.svc}`;
 
 const cli = `# from your Forge, so the CLI matches its API
@@ -58,7 +59,7 @@ forge deploy promote payments --yes   # production, tagged v1.0.0`;
 const steps: {title: string; text: ReactNode; code: string; lang: string; link: string; linkText: string}[] = [
   {
     title: '1. Install Forge on Kubernetes',
-    text: 'From code: an Argo CD Application in your Git repo installs the API, the dashboard, the login through your GitHub App, and a database. Every change after that, upgrades included, is a commit.',
+    text: 'From code: an Argo CD Application in your Git repo installs the API, the dashboard and the login through your GitHub App, on a PostgreSQL you run outside it. Every change after that, upgrades included, is a commit.',
     code: install,
     lang: 'yaml',
     link: '/docs/running-your-own-forge',

@@ -5,7 +5,7 @@ sidebar_position: 20
 # Chart Values
 
 Every setting of the chart `oci://ghcr.io/showmino/charts/forge`, as of
-version `0.31.0`. [Install Forge](01-running-your-own-forge.md) walks through
+version `0.32.0`. [Install Forge](01-running-your-own-forge.md) walks through
 an install; this page is the reference. Your settings go under
 `spec.source.helm.valuesObject` in Forge's Argo CD Application, in your Git
 repo; a change is a commit. They hold only what differs from the defaults,
@@ -13,7 +13,7 @@ and the examples below are complete sets you can copy in. With the Helm CLI
 instead, the same keys go in a values file (`-f forge-values.yaml`).
 
 ```sh
-helm show values oci://ghcr.io/showmino/charts/forge --version 0.31.0   # the defaults, with comments
+helm show values oci://ghcr.io/showmino/charts/forge --version 0.32.0   # the defaults, with comments
 ```
 
 ## Required
@@ -25,13 +25,14 @@ helm show values oci://ghcr.io/showmino/charts/forge --version 0.31.0   # the de
 | `host` | The address Forge is reached at, without a scheme |
 | The Secret `github.existingSecret` | Created by you before the install (see [GitHub](#github)) |
 | `ingress.className` or `gateway.parentRefs` | How the address reaches Forge (see [Address](#address)) |
+| `database.existingSecret` and `database.host` | Forge's PostgreSQL, which you run outside Forge's install (see [Database](#database)) |
 
 With previews or deploys on, `apps.domain` and `apps.pullSecret` are required
 too. The chart refuses to render without them and says which one is missing.
 
 ## Examples
 
-### Ingress, cert-manager, the bundled database
+### Ingress, cert-manager, your database
 
 The smallest production-like install: one address with TLS, no previews or
 deploys yet.
@@ -50,9 +51,12 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
   tls:
     secretName: forge-tls
+database:
+  existingSecret: forge-database
+  host: forge-db-rw.databases.svc
 ```
 
-### Gateway, previews and deploys, CloudNativePG with backups
+### Gateway, previews and deploys
 
 ```yaml
 # forge-values.yaml
@@ -67,14 +71,8 @@ gateway:
   parentRefs:
     - {name: public, namespace: gateway-system}
 database:
-  mode: cloudnativepg
-  cloudnativepg:
-    instances: 2
-    size: 10Gi
-    plugins:
-      - name: barman-cloud.cloudnative-pg.io
-        isWALArchiver: true
-        parameters: {barmanObjectName: forge-db-backups}
+  existingSecret: forge-database
+  host: forge-db-rw.databases.svc
 argocdURL: https://argocd.example.com
 apps:
   domain: apps.example.com
@@ -91,7 +89,7 @@ clusters:
   name: production
 ```
 
-### Your own PostgreSQL, deploys over an Ingress, images on another registry
+### A managed PostgreSQL, deploys over an Ingress, images on another registry
 
 ```yaml
 # forge-values.yaml
@@ -105,10 +103,8 @@ ingress:
   tls:
     secretName: forge-tls
 database:
-  mode: external
-  external:
-    existingSecret: forge-db
-    host: my-server.postgres.database.azure.com
+  existingSecret: forge-database
+  host: my-server.postgres.database.azure.com
 imageRegistry: myregistry.azurecr.io
 apps:
   domain: apps.example.com
@@ -178,7 +174,7 @@ certificate must be trusted there.
 | `web.enabled` | `true` | Run the dashboard. `false` leaves only the API, the CLI and the login, or a dashboard of your own named in `web.origins` |
 | `web.origins` | `[]` | Addresses of dashboards that run elsewhere, for example the dashboard deployed as a Forge service in staging and production: `[https://forge.example.com, https://forge-staging.example.com]`. Each may sign in (`<origin>/auth/callback` is allowed) and call the API from a browser. Lower case, `https://host`, no path |
 | `web.image.repository` | `ghcr.io/showmino/forge-web` | The dashboard's image |
-| `web.image.tag` | `v0.1.34` (in `0.31.0`) | The dashboard has versions of its own; each chart release pins one |
+| `web.image.tag` | `v0.1.34` (in `0.32.0`) | The dashboard has versions of its own; each chart release pins one |
 | `web.replicas` | `1` | Dashboard pods |
 | `web.resources` | requests `cpu: 10m`, `memory: 96Mi`; limits `memory: 384Mi` | The dashboard's resources |
 
@@ -193,33 +189,26 @@ certificate must be trusted there.
 
 ## Database
 
-`database.mode` picks one of three:
-
-| Mode | What you get |
-| --- | --- |
-| `bundled` (default) | One PostgreSQL pod with a volume, in this release. Its password is made once into the Secret `forge-db`, which `helm uninstall` keeps. **No backups** |
-| `external` | Your own PostgreSQL server |
-| `cloudnativepg` | A CloudNativePG Cluster (the operator must be installed), with backups through its plugins |
+Forge keeps its data in a PostgreSQL server you run, outside Forge's install
+(another namespace with its own Application, or a managed server), so that
+removing Forge never removes its data. The chart runs no database. It needs
+two databases on that server owned by one user: the API's (named in `uri`)
+and the login's (`database.loginDatabase`). [Install Forge](01-running-your-own-forge.md#3-make-forges-database)
+shows one with CloudNativePG.
 
 | Value | Default | What |
 | --- | --- | --- |
-| `database.mode` | `bundled` | `bundled`, `external` or `cloudnativepg` |
-| `database.bundled.image` | `mirror.gcr.io/library/postgres:18` | The PostgreSQL image |
-| `database.bundled.size` | `5Gi` | The volume's size |
-| `database.bundled.storageClass` | `""` | Empty is the cluster's default StorageClass |
-| `database.bundled.existingSecret` | `""` | Empty: the chart makes the Secret `forge-db` once and reads it back on every upgrade. With Argo CD or `helm template`, which cannot read it back, name a Secret of yours with `password` and `uri` (`postgres://forge:<password>@forge-db.<namespace>.svc:5432/forge?sslmode=disable`) |
-| `database.external.existingSecret` | `""` | Required with `external`: a Secret with `uri` (the API's connection string, for example `postgres://forge:<password>@db.example.com:5432/forge?sslmode=require`) and `password` (the same password; the login needs it on its own) |
-| `database.external.host` | `""` | Required with `external`: the server, for the login |
-| `database.external.port` | `5432` | The server's port |
-| `database.external.user` | `forge` | The user, who also owns the login's database |
-| `database.external.loginDatabase` | `dex` | The login keeps its sessions in this second database on the same server. Create it before the install |
-| `database.external.sslMode` | `require` | The login's `sslmode` |
-| `database.cloudnativepg.instances` | `2` | PostgreSQL instances (one primary, the rest replicas) |
-| `database.cloudnativepg.size` | `5Gi` | Each instance's volume |
-| `database.cloudnativepg.storageClass` | `""` | Empty is the cluster's default StorageClass |
-| `database.cloudnativepg.plugins` | `[]` | CloudNativePG plugins on the Cluster, for example backups with the Barman Cloud plugin (see the second example) |
-| `database.cloudnativepg.serviceAccountAnnotations` | `{}` | Annotations on the database pods' ServiceAccount, for example a workload identity for the backups |
-| `database.cloudnativepg.podLabels` | `{}` | Labels on the database pods |
+| `database.existingSecret` | `""` | **Required**: a Secret in Forge's namespace with `uri` (the API's connection string, for example `postgres://forge:<password>@db.example.com:5432/forge?sslmode=require`, the password URL-escaped) and `password` (the same password; the login needs it on its own) |
+| `database.host` | `""` | **Required**: the server, for the login |
+| `database.port` | `5432` | The server's port |
+| `database.user` | `forge` | The user, who also owns the login's database |
+| `database.loginDatabase` | `dex` | The login keeps its sessions in this second database on the same server. Create it before the install |
+| `database.sslMode` | `require` | The login's `sslmode` |
+
+Before 0.32.0 the chart could run the database itself (`database.mode`,
+`database.bundled`, `database.cloudnativepg`) and had these values under
+`database.external`. 0.32.0 refuses the old values; [From a chart before
+0.32.0](01-running-your-own-forge.md#from-a-chart-before-0320) says how to move.
 
 ## Services: Previews and Deploys
 
@@ -321,7 +310,7 @@ install` and `helm upgrade` print it:
 
 ## All Defaults
 
-The chart's `values.yaml` at `0.31.0`, with its comments. `helm show values`
+The chart's `values.yaml` at `0.32.0`, with its comments. `helm show values`
 prints the same settings.
 
 ```yaml
@@ -437,51 +426,24 @@ login:
   # github.keys.clientID and clientSecret. Empty: github.existingSecret.
   existingSecret: ""
 
+# Forge's PostgreSQL, which you run: the chart runs no database of its own.
+# Keep it outside Forge's namespace and its Argo CD Application (another
+# namespace, a CloudNativePG Cluster of its own Application, or a managed
+# server), so that removing Forge never removes its data, and back it up.
+# Two databases on it, owned by one user: one for the API (named in "uri")
+# and loginDatabase for the login's sessions. Create both first.
 database:
-  # "bundled": one PostgreSQL pod with a volume, in this release. Its password
-  # is generated once into the Secret forge-db, which an uninstall keeps.
-  # No backups: use "cloudnativepg" or "external" for data you can't lose.
-  # "external": a PostgreSQL server of yours (see external below).
-  # "cloudnativepg": a CloudNativePG Cluster (the operator must be installed),
-  # with backups through its plugins.
-  mode: bundled
-  bundled:
-    image: mirror.gcr.io/library/postgres:18
-    size: 5Gi
-    # Empty: the cluster's default StorageClass.
-    storageClass: ""
-    # Empty: the chart makes the Secret forge-db once, and reads it back on
-    # every upgrade. A tool that renders without access to the cluster (Argo
-    # CD, helm template) would make a new password each time: name a Secret of
-    # yours instead, with "password" and "uri"
-    # (postgres://forge:<password>@forge-db.<namespace>.svc:5432/forge?sslmode=disable).
-    existingSecret: ""
-  external:
-    # A Secret you create, with "uri" (the API's connection string, for
-    # example postgres://forge:<password>@db.example.com:5432/forge?sslmode=require)
-    # and "password" (the same password: the login needs it on its own).
-    existingSecret: ""
-    # For the login, which keeps its sessions in a second database on the
-    # same server, owned by the same user. Create that database first.
-    host: ""
-    port: 5432
-    user: forge
-    loginDatabase: dex
-    sslMode: require
-  cloudnativepg:
-    instances: 2
-    size: 5Gi
-    storageClass: ""
-    # CloudNativePG plugins on the Cluster, for example backups with the
-    # Barman Cloud plugin:
-    #   - name: barman-cloud.cloudnative-pg.io
-    #     isWALArchiver: true
-    #     parameters: {barmanObjectName: forge-db-backups}
-    plugins: []
-    # Annotations on the database pods' ServiceAccount (a workload identity
-    # for the backups) and labels on the pods.
-    serviceAccountAnnotations: {}
-    podLabels: {}
+  # A Secret in Forge's namespace with "uri" (the API's connection string,
+  # for example postgres://forge:<password>@db.example.com:5432/forge?sslmode=require,
+  # the password URL-escaped) and "password" (the same password: the login
+  # needs it on its own).
+  existingSecret: ""
+  # The server, for the login (the API reads "uri").
+  host: ""
+  port: 5432
+  user: forge
+  loginDatabase: dex
+  sslMode: require
 
 # Where your services' CI pushes their images: a registry host and an
 # optional path, no scheme. Deploys and previews run

@@ -211,7 +211,7 @@ spec:
   project: default
   source:
     repoURL: oci://ghcr.io/showmino/charts/forge
-    targetRevision: 0.32.0         # Forge's version: the API, dashboard and deploy chart
+    targetRevision: 0.33.0         # Forge's version: the API, dashboard and deploy chart
     path: .
     helm:
       releaseName: forge
@@ -333,7 +333,7 @@ Make the database (step 3) and the Secrets (step 4), put the `valuesObject`
 from step 5 in `forge-values.yaml`, and:
 
 ```sh
-helm install forge oci://ghcr.io/showmino/charts/forge --version 0.32.0 -n forge -f forge-values.yaml
+helm install forge oci://ghcr.io/showmino/charts/forge --version 0.33.0 -n forge -f forge-values.yaml
 helm test forge -n forge          # the API answers and the login is reachable
 ```
 

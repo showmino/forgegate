@@ -112,7 +112,7 @@ spec:
   project: default
   source:
     repoURL: oci://ghcr.io/showmino/charts/forge
-    targetRevision: 0.30.0         # Forge's version: the API, dashboard and deploy chart
+    targetRevision: 0.31.0         # Forge's version: the API, dashboard and deploy chart
     path: .
     helm:
       releaseName: forge
@@ -227,7 +227,7 @@ itself here), put the `valuesObject` from step 4 in `forge-values.yaml`
 without the `database` part, and:
 
 ```sh
-helm install forge oci://ghcr.io/showmino/charts/forge --version 0.30.0 -n forge -f forge-values.yaml
+helm install forge oci://ghcr.io/showmino/charts/forge --version 0.31.0 -n forge -f forge-values.yaml
 helm test forge -n forge          # the API answers and the login is reachable
 ```
 

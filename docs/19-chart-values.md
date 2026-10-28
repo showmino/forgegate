@@ -5,7 +5,7 @@ sidebar_position: 20
 # Chart Values
 
 Every setting of the chart `oci://ghcr.io/showmino/charts/forge`, as of
-version `0.30.0`. [Install Forge](01-running-your-own-forge.md) walks through
+version `0.31.0`. [Install Forge](01-running-your-own-forge.md) walks through
 an install; this page is the reference. Your settings go under
 `spec.source.helm.valuesObject` in Forge's Argo CD Application, in your Git
 repo; a change is a commit. They hold only what differs from the defaults,
@@ -13,7 +13,7 @@ and the examples below are complete sets you can copy in. With the Helm CLI
 instead, the same keys go in a values file (`-f forge-values.yaml`).
 
 ```sh
-helm show values oci://ghcr.io/showmino/charts/forge --version 0.30.0   # the defaults, with comments
+helm show values oci://ghcr.io/showmino/charts/forge --version 0.31.0   # the defaults, with comments
 ```
 
 ## Required
@@ -175,9 +175,10 @@ certificate must be trusted there.
 
 | Value | Default | What |
 | --- | --- | --- |
-| `web.enabled` | `true` | Run the dashboard. `false` leaves only the API, the CLI and the login |
+| `web.enabled` | `true` | Run the dashboard. `false` leaves only the API, the CLI and the login, or a dashboard of your own named in `web.origins` |
+| `web.origins` | `[]` | Addresses of dashboards that run elsewhere, for example the dashboard deployed as a Forge service in staging and production: `[https://forge.example.com, https://forge-staging.example.com]`. Each may sign in (`<origin>/auth/callback` is allowed) and call the API from a browser. Lower case, `https://host`, no path |
 | `web.image.repository` | `ghcr.io/showmino/forge-web` | The dashboard's image |
-| `web.image.tag` | `v0.1.34` (in `0.30.0`) | The dashboard has versions of its own; each chart release pins one |
+| `web.image.tag` | `v0.1.34` (in `0.31.0`) | The dashboard has versions of its own; each chart release pins one |
 | `web.replicas` | `1` | Dashboard pods |
 | `web.resources` | requests `cpu: 10m`, `memory: 96Mi`; limits `memory: 384Mi` | The dashboard's resources |
 
@@ -315,10 +316,12 @@ install` and `helm upgrade` print it:
 | `deploys.excludedNamespaces: ... is not a namespace name` | Lower case, like `docs-staging` |
 | `clusters.remote needs clusters.enabled` | Turn on `clusters.enabled` |
 | `apps.ingress.annotations must not contain {{` | Argo CD's ApplicationSet would read it as a template; remove it |
+| `web.origins: "..." is not an origin such as https://forge.example.com` | Write the address as a browser sends it: `https://` and the host in lower case, no path or trailing slash |
+| `web.origins: "...": leave out the port 80 or 443` | Remove the port: a browser leaves the scheme's own port out |
 
 ## All Defaults
 
-The chart's `values.yaml` at `0.30.0`, with its comments. `helm show values`
+The chart's `values.yaml` at `0.31.0`, with its comments. `helm show values`
 prints the same settings.
 
 ```yaml
@@ -407,7 +410,14 @@ api:
     limits: {memory: 256Mi}
 
 web:
+  # The dashboard, on host. Turn it off when the dashboard runs elsewhere,
+  # for example as a Forge service, and name its addresses in origins.
   enabled: true
+  # Addresses of other dashboards that sign in to Forge and call its API
+  # from a browser, such as a forge-web service in staging and production:
+  # https://host, no path. Each becomes a Dex redirect URI
+  # (<origin>/auth/callback), an allowed origin of Dex and of the API.
+  origins: []
   image:
     repository: ghcr.io/showmino/forge-web
     tag: v0.1.34

@@ -155,5 +155,23 @@ See [Operations](11-operations.md).
 
 ## In the Dashboard
 
+The **Overview** (the dashboard's home page, `https://forge.example.com/`)
+opens with a status board: what `forge deploy status` shows, for every
+service at once.
+
+- A row for production, then one for staging, with a tile for each service
+  deployed there. A service that is degraded, not running or out of sync
+  comes first and is the only tile in colour. A healthy tile shows the
+  version (or commit) that runs and when it was deployed.
+- Next to each row, how many services are unhealthy or out of sync, how many
+  run there, and how many in the catalog are not deployed there yet.
+- Under the rows: the deploys started today and how many of the finished
+  ones failed, the previews that are live and how many end within six hours,
+  and how many clusters need a look. Each links to its page.
+
+Click a tile to open that service. Below the board, the Overview follows the
+deploys in flight and lists what needs attention and the deploys that ended
+in the last 24 hours.
+
 A service's page in the dashboard shows both environments, with
 Promote and Roll back buttons behind a confirmation.

@@ -28,6 +28,7 @@ service:
 run:
   port: 8080                      # default 8080
   health: /healthz                # default /healthz; readiness and liveness
+  writable: [/var/cache/app]      # folders the app writes besides /tmp
   domain: example.com             # a platform public domain, or "none" for internal only
   host: pay                       # the name before the domain (default: the service name)
   staging:
@@ -81,9 +82,10 @@ port 8080 with the probe on `/healthz`.
 
 | Field | Meaning | More |
 | --- | --- | --- |
-| `image` | Only for a service without a repo: the image it runs, such as `nginx:1.27`, which Forge writes in full (`docker.io/library/nginx:1.27`). Such a forge.yaml lives in the deploy repo; a repo's own forge.yaml may not have it | [Create a service](04-create-a-service.md#run-an-image-instead-of-a-template) |
+| `image` | Only for a service without a repo: the image it runs, such as `nginxinc/nginx-unprivileged:1.27`, which Forge writes in full (`docker.io/nginxinc/nginx-unprivileged:1.27`). It must run as a non-root user given by number. Such a forge.yaml lives in the deploy repo; a repo's own forge.yaml may not have it | [Create a service](04-create-a-service.md#run-an-image-instead-of-a-template) |
 | `port` | The HTTP port the app listens on (also given to it as `$PORT`) | |
 | `health` | The path probed for readiness and liveness. It should answer 200 without calling other services | |
+| `writable` | Folders the app writes besides `/tmp`, up to 8, such as `/var/cache/nginx`. The root filesystem is read-only; each folder starts empty on every start, as `/tmp` does. Not `/`, nor `/tmp` or a folder inside it | [Create a service](04-create-a-service.md#run-an-image-instead-of-a-template) |
 | `domain` | One of the platform's public domains (`forge domain list`), or `none` for no public address. Refused when the platform has none | [Addresses](08-addresses.md) |
 | `host` | The name before the domain, when it is not the service's own. `@` is not allowed here; use `forge service address` | [Addresses](08-addresses.md) |
 | `staging.public` | `false` keeps staging on its internal address while production stays public | [Addresses](08-addresses.md) |

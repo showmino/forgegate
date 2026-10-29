@@ -117,6 +117,7 @@ forge create <name> (--template <template>[@version] | --image <image>) --team <
 --set stringArray       template parameter as name=value (repeatable)
 --team string           owning team
 --template string       template to use, optionally with @version (see 'forge template list')
+--writable strings      with --image: folders it writes besides /tmp, such as /var/cache/nginx (repeatable)
 ```
 
 ```sh
@@ -125,7 +126,7 @@ forge create ledger --template go-grpc@v1.0.0 --team billing --owner ana@example
 forge create shop --template nextjs --team web --replicas 2 --env LOG_LEVEL=info \
   --secret stripe=vaults/Apps/items/shop-stripe:STRIPE_KEY=credential --job 'cleanup=0 3 * * *:node cleanup.js'
 forge create payments --template go-grpc --team billing --dry-run
-forge create web --image nginx:1.27 --port 80 --health / --team web
+forge create web --image nginxinc/nginx-unprivileged:1.27 --health / --team web
 ```
 
 ## forge deploy

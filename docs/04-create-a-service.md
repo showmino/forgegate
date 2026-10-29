@@ -155,15 +155,32 @@ To run an image someone else built, such as nginx, a tool from a vendor or
 an image your other CI pushes, give `--image` instead of `--template`:
 
 ```sh
-forge create web --image nginx:1.27 --port 80 --health / --team web
+forge create web --image nginxinc/nginx-unprivileged:1.27 --health / --team web
 ```
 
 Forge checks the image, creates the service and deploys it to staging, and
 prints the deployment with its address. The service gets no repo. Its
-forge.yaml, with `run.image: docker.io/library/nginx:1.27`, is kept in your
-Forge's deploy repo, at `services/web/forge.yaml`.
+forge.yaml, with `run.image: docker.io/nginxinc/nginx-unprivileged:1.27`, is
+kept in your Forge's deploy repo, at `services/web/forge.yaml`.
 
-- `--port` is the port the image listens on (default 8080), and `--health` the
+Every Forge service runs as a non-root user, with a read-only filesystem
+except `/tmp` and no extra privileges. So the image must say which user it
+runs as, by number (its `USER`, such as `101`):
+
+- An image that runs as root is refused before anything is created, with
+  `runs as root ... Forge runs every service as a non-root user`. Many
+  projects publish a non-root variant: `nginxinc/nginx-unprivileged` instead
+  of `nginx`, `bitnami/...` images, or `-rootless` tags. Otherwise build your
+  own image with a `USER` line.
+- An image whose `USER` is a name (`USER nginx`) is refused too: Kubernetes
+  can only check that a user given by number is not root.
+- If the image writes to folders other than `/tmp`, name them with
+  `--writable /var/cache/nginx` (repeatable; `run.writable` in forge.yaml).
+  Each one starts empty, like `/tmp`. Without it, the app fails with
+  `Read-only file system` when it writes there.
+
+- `--port` is the port the image listens on (default 8080; the non-root
+  nginx image listens on 8080, as a non-root user cannot use port 80), and `--health` the
   path probed to see it is ready (default `/healthz`). Every run option above
   may be set too.
 - The image needs a tag, and not `latest`, which moves. Your Forge may also

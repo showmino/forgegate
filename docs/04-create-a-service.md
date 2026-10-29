@@ -199,7 +199,9 @@ URL; review and merge it there. Forge refuses if a file is already there.
 
 ## In the Dashboard
 
-The dashboard's **Create** page (`https://forge.example.com/create`) walks through the same steps: Template,
+Open it with **Create service** in the top bar, next to the theme switch: it
+is there on every page (at phone width, the **+** alone). The dashboard's
+**Create** page (`https://forge.example.com/create`) walks through the same steps: Template,
 Name and owner, Template inputs, How it runs and Review. Review has an **Edit**
 link for each step. The panel beside the form shows the matching
 `forge create` command as you fill it in.
@@ -215,8 +217,8 @@ refused image (such as one tagged `latest`) is shown with the reason, and
 nothing is created.
 
 The Team list shows your own teams first. The page refuses a team you are not
-in, unless you are an admin. If you are in no team, the Create button is not
-there: ask an admin to add you to the team on GitHub.
+in, unless you are an admin. If you are in no team, the **Create service**
+button is not there: ask an admin to add you to the team on GitHub.
 
 ## After Creating
 

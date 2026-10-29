@@ -358,6 +358,20 @@ helm install forge oci://ghcr.io/showmino/charts/forge --version 0.33.0 -n forge
 helm test forge -n forge          # the API answers and the login is reachable
 ```
 
+The chart is also in a classic Helm repo, for tools that do not read OCI
+registries. It is the same package:
+
+```sh
+helm repo add forge https://forgegate.io/charts
+helm repo update
+helm search repo forge/forge --versions   # the versions there
+helm install forge forge/forge --version 0.33.0 -n forge -f forge-values.yaml
+```
+
+In an Argo CD Application, that is `repoURL: https://forgegate.io/charts`
+with `chart: forge` and `targetRevision: 0.33.0`, instead of the OCI
+`repoURL` and `path`.
+
 ## Previews and deploys
 
 Both are off by default. Their settings go in the Application's

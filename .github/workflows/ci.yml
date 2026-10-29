@@ -43,6 +43,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # forgegate.io/charts: the forge chart's packages from showmino/forge's
+      # releases, indexed (scripts/charts.sh). New versions arrive with the
+      # next build, such as the version bump after a forge release.
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.21.4
+      - name: Collect the chart repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: sh scripts/charts.sh
       - name: Build and push
         run: |
           image=ghcr.io/showmino/forgegate:${SHA::7}

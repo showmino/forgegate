@@ -9,7 +9,8 @@ You need the CLI, logged in to your Forge
 (`forge template list`; a new Forge has none until you
 [write your templates](03-write-your-templates.md)).
 
-`forge create` makes a new service from a template in one step:
+`forge create` makes a new service from a template in one step (to run an
+image instead, see [Run an image](#run-an-image-instead-of-a-template)):
 
 1. It renders the template.
 2. It creates the private repo `github.com/my-org/<name>`.
@@ -147,6 +148,40 @@ forge create shop --template nextjs --team web \
 
 Forge refuses an option the template does not offer. See [Run options](09-run-options.md)
 for what each one means.
+
+## Run an Image Instead of a Template
+
+To run an image someone else built, such as nginx, a tool from a vendor or
+an image your other CI pushes, give `--image` instead of `--template`:
+
+```sh
+forge create web --image nginx:1.27 --port 80 --health / --team web
+```
+
+Forge checks the image, creates the service and deploys it to staging, and
+prints the deployment with its address. The service gets no repo. Its
+forge.yaml, with `run.image: docker.io/library/nginx:1.27`, is kept in your
+Forge's deploy repo, at `services/web/forge.yaml`.
+
+- `--port` is the port the image listens on (default 8080), and `--health` the
+  path probed to see it is ready (default `/healthz`). Every run option above
+  may be set too.
+- The image needs a tag, and not `latest`, which moves. Your Forge may also
+  allow images only from some registries. A refused image exits 6 with the
+  reason, such as `the tag latest moves; name a version, such as nginx:1.27`.
+- An image your services' own CI pushes (under your Forge's image registry and
+  organization, such as `ghcr.io/my-org/`) is refused: deploy it from its
+  service's repo. So is a registry named by an address or a one-word name
+  (`localhost:5000`), unless your Forge allows it by name.
+- Public images need no login. A private one needs a login for its registry in
+  your Forge's pull secret.
+- `--deploy=false` only creates the service. `--dry-run` checks the image and
+  the name, and creates nothing. With `-o json` or `-o yaml`, forge prints the
+  staging deployment it ends with. If the deploy cannot start, the service is
+  created anyway; run `forge deploy start <name> --env staging`.
+- Such a service has no preview environments, since they are made from a
+  branch. Deploy another tag with `forge deploy start web --env staging --ref
+  1.28` (see [Deploy and release](07-deploy-and-release.md)).
 
 ## File Templates: a Pull Request Instead of a Repo
 

@@ -153,6 +153,28 @@ forge op watch op_9f2c4a1b0c3d
 
 See [Operations](11-operations.md).
 
+## A Service That Runs an Image
+
+A service made with `forge create --image` has no repo, so there is no
+commit to deploy. Instead, `--ref` is the image tag to run:
+
+```sh
+forge deploy start web --env staging --ref 1.28
+forge deploy promote web
+```
+
+- **The tag:** Forge checks it against the image rules and looks it up in its
+  registry. The tag is pinned to its digest, so production gets exactly what
+  staging ran, even if the tag is later pushed again.
+- **The version:** the tag (`1.28`). There is no repo to tag a release in.
+- **Without `--ref`:** the tag the service's forge.yaml names.
+- **A new tag:** once it is deployed, it is written into that forge.yaml, so
+  the next plain `forge deploy start` runs it again. A deploy that fails
+  leaves forge.yaml as it was.
+- **Rollback:** works as for any service. It runs an earlier digest and leaves
+  forge.yaml as it is.
+- **CI:** a CI token cannot deploy such a service, since it belongs to a repo.
+
 ## In the Dashboard
 
 The **Overview** (the dashboard's home page, `https://forge.example.com/`)

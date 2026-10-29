@@ -169,10 +169,16 @@ Forge's deploy repo, at `services/web/forge.yaml`.
 - The image needs a tag, and not `latest`, which moves. Your Forge may also
   allow images only from some registries. A refused image exits 6 with the
   reason, such as `the tag latest moves; name a version, such as nginx:1.27`.
+- An image your services' own CI pushes (under your Forge's image registry and
+  organization, such as `ghcr.io/my-org/`) is refused: deploy it from its
+  service's repo. So is a registry named by an address or a one-word name
+  (`localhost:5000`), unless your Forge allows it by name.
 - Public images need no login. A private one needs a login for its registry in
   your Forge's pull secret.
 - `--deploy=false` only creates the service. `--dry-run` checks the image and
-  the name, and creates nothing.
+  the name, and creates nothing. With `-o json` or `-o yaml`, forge prints the
+  staging deployment it ends with. If the deploy cannot start, the service is
+  created anyway; run `forge deploy start <name> --env staging`.
 - Such a service has no preview environments, since they are made from a
   branch. Deploy another tag with `forge deploy start web --env staging --ref
   1.28` (see [Deploy and release](07-deploy-and-release.md)).

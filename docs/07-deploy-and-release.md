@@ -168,8 +168,9 @@ forge deploy promote web
   staging ran, even if the tag is later pushed again.
 - **The version:** the tag (`1.28`). There is no repo to tag a release in.
 - **Without `--ref`:** the tag the service's forge.yaml names.
-- **A new tag:** it is written into that forge.yaml, so the next plain
-  `forge deploy start` runs it again.
+- **A new tag:** once it is deployed, it is written into that forge.yaml, so
+  the next plain `forge deploy start` runs it again. A deploy that fails
+  leaves forge.yaml as it was.
 - **Rollback:** works as for any service. It runs an earlier digest and leaves
   forge.yaml as it is.
 - **CI:** a CI token cannot deploy such a service, since it belongs to a repo.

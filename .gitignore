@@ -3,6 +3,8 @@
 
 # Docusaurus
 /build
+# Made by scripts/charts.sh in CI
+/static/charts
 /.docusaurus
 /.cache-loader
 

@@ -225,7 +225,8 @@ link for each step. The panel beside the form shows the matching
 
 The first step also asks where to start. **From a template** is the path
 above. **From an image** runs an image, as `forge create --image` does: give
-the image with its tag, and if it needs them, its port and health path. The
+the image with its tag, and if it needs them, its port, health path and
+**Writable folders** (`--writable`, comma-separated). The
 steps are then Image, Name and owner, How it runs (every run option) and
 Review; there are no template inputs. Review has a box, **Deploy it to
 staging once it is created**, ticked by default: the page then deploys the

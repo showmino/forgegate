@@ -204,6 +204,16 @@ Name and owner, Template inputs, How it runs and Review. Review has an **Edit**
 link for each step. The panel beside the form shows the matching
 `forge create` command as you fill it in.
 
+The first step also asks where to start. **From a template** is the path
+above. **From an image** runs an image, as `forge create --image` does: give
+the image with its tag, and if it needs them, its port and health path. The
+steps are then Image, Name and owner, How it runs (every run option) and
+Review; there are no template inputs. Review has a box, **Deploy it to
+staging once it is created**, ticked by default: the page then deploys the
+new service and follows the deploy live. Untick it for `--deploy=false`. A
+refused image (such as one tagged `latest`) is shown with the reason, and
+nothing is created.
+
 The Team list shows your own teams first. The page refuses a team you are not
 in, unless you are an admin. If you are in no team, the Create button is not
 there: ask an admin to add you to the team on GitHub.

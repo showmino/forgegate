@@ -196,4 +196,7 @@ deploys in flight and lists what needs attention and the deploys that ended
 in the last 24 hours.
 
 A service's page in the dashboard shows both environments, with
-Promote and Roll back buttons behind a confirmation.
+Promote and Roll back buttons behind a confirmation. For a service that runs
+an image, **Deploy** asks for an image tag instead of a branch; left empty,
+it is the tag in the service's forge.yaml. Such a service offers no preview
+environments.

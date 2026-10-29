@@ -81,6 +81,7 @@ port 8080 with the probe on `/healthz`.
 
 | Field | Meaning | More |
 | --- | --- | --- |
+| `image` | Only for a service without a repo: the image it runs, such as `nginx:1.27`, which Forge writes in full (`docker.io/library/nginx:1.27`). Such a forge.yaml lives in the deploy repo; a repo's own forge.yaml may not have it | [Create a service](04-create-a-service.md#run-an-image-instead-of-a-template) |
 | `port` | The HTTP port the app listens on (also given to it as `$PORT`) | |
 | `health` | The path probed for readiness and liveness. It should answer 200 without calling other services | |
 | `domain` | One of the platform's public domains (`forge domain list`), or `none` for no public address. Refused when the platform has none | [Addresses](08-addresses.md) |

@@ -218,6 +218,7 @@ Both are off by default. Both need `apps.domain` and `apps.pullSecret`.
 | Value | Default | What |
 | --- | --- | --- |
 | `imageRegistry` | `""` (ghcr.io) | Where your services' CI pushes images: a host and an optional path, no scheme. Forge runs `<imageRegistry>/<owner>/<service>:<commit>` |
+| `allowedRegistries` | `""` (any) | Registry hosts a service made with `forge create --image` may run images from, comma separated, such as `ghcr.io,docker.io`. Other images are refused |
 | `apps.domain` | `""` | A domain you control. Previews are at `*.preview.<domain>`, deploys at `*.staging.<domain>` and `*.production.<domain>`: point those names at your Gateway or ingress controller |
 | `apps.pullSecret` | `""` | A `dockerconfigjson` Secret in the release's namespace that can pull your services' images. Forge checks that an image exists with it and copies it into each service's namespace |
 | `apps.routing` | `gateway` | `gateway`: the chart makes the Gateway `forge-previews` (needs a Gateway API implementation). `ingress`: each deploy gets an Ingress, so an ingress controller is enough; previews need `gateway` |

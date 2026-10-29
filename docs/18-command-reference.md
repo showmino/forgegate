@@ -94,19 +94,23 @@ forge cluster list -o json | jq '.clusters[].totals'
 
 ## forge create
 
-Create a service from a template.
+Create a service from a template or an image.
 
 ```text
-forge create <name> --template <template>[@version] --team <team> [flags]
+forge create <name> (--template <template>[@version] | --image <image>) --team <team> [flags]
 
 --autoscaling-max int   run option: let production grow on CPU up to this many pods
+--deploy                with --image: deploy it to staging and watch the deploy (default true)
 --domain string         the public domain the service is reached under (run.domain); 'forge domain list' shows them, the default first
 --dry-run               render and check without creating anything; print the files
 --env stringArray       run option: an environment variable as NAME=value (repeatable)
+--health string         with --image: the path its readiness is probed at (default /healthz)
+--image string          an image to run instead of a template, such as nginx:1.27; the service gets no repo
 --internal              reach the service only on the platform's network, with no public address (run.domain: none)
 --internal-staging      reach staging only on the platform's network; production stays public (run.staging.public: false)
 --job stringArray       run option: a cron job as name=<schedule>:<command>, e.g. 'cleanup=0 3 * * *:node cleanup.js' (repeatable)
 --owner strings         owner email or handle (repeatable)
+--port int              with --image: the port it listens on (default 8080)
 --replicas int          run option: production's pod count (staging runs one)
 --resources strings     run option: requests.cpu=100m,requests.memory=128Mi,limits.cpu=500m,limits.memory=512Mi
 --secret stringArray    run option: a 1Password item as name=vaults/<vault>/items/<item>:VAR=field,VAR2=field (repeatable)
@@ -121,6 +125,7 @@ forge create ledger --template go-grpc@v1.0.0 --team billing --owner ana@example
 forge create shop --template nextjs --team web --replicas 2 --env LOG_LEVEL=info \
   --secret stripe=vaults/Apps/items/shop-stripe:STRIPE_KEY=credential --job 'cleanup=0 3 * * *:node cleanup.js'
 forge create payments --template go-grpc --team billing --dry-run
+forge create web --image nginx:1.27 --port 80 --health / --team web
 ```
 
 ## forge deploy
@@ -190,13 +195,14 @@ forge deploy start [service] --env staging|production [flags]
 --bump string   for a first deploy of a commit to production: patch (default), minor or major
 --dry-run       check and resolve without deploying
 --env string    staging or production
---ref string    branch, tag or commit (default $GITHUB_SHA in GitHub Actions, else main)
+--ref string    branch, tag or commit (default $GITHUB_SHA in GitHub Actions, else main); for a service without a repo, the image tag
 --wait          watch the deploy until it ends (default true)
 ```
 
 ```sh
 forge deploy start payments --env staging
 forge deploy start --env staging --ref v1.4.2    # in a service repo
+forge deploy start web --env staging --ref 1.28  # a service that runs nginx
 ```
 
 ### forge deploy status

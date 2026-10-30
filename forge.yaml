@@ -8,6 +8,9 @@ service:
 run:
   port: 3000
   health: /api/healthz
+  # Production keeps two pods, so a restart or a node going down does not
+  # take the site off; staging keeps one.
+  replicas: 2
   autoscaling:
     max: 5
   domain: forgegate.io

@@ -200,6 +200,65 @@ runs as, by number (its `USER`, such as `101`):
   branch. Deploy another tag with `forge deploy start web --env staging --ref
   1.28` (see [Deploy and release](07-deploy-and-release.md)).
 
+## Run a Helm Chart
+
+To run a published Helm chart, such as a tool's official chart, give
+`--chart` with its repository, version and the Service that gets the
+address:
+
+```sh
+forge create podinfo --chart podinfo --chart-repo oci://ghcr.io/stefanprodan/charts \
+  --chart-version 6.7.1 --expose podinfo:9898 --values podinfo.yaml --team web
+```
+
+Forge finds the version in the repository, creates the service and deploys it
+to staging, as for an image. The service gets no repo: its forge.yaml, with
+`chart`, is kept in your Forge's deploy repo (see
+[forge.yaml](06-forge-yaml.md#a-helm-chart)). Your Forge must have charts
+switched on (`deploys.charts.enabled` in [its chart values](19-chart-values.md)).
+
+- `--chart-repo` is an OCI registry path (`oci://ghcr.io/my-org/charts`) or an
+  HTTPS chart repository (`https://charts.example.com`). Your Forge may allow
+  only some repositories.
+- `--chart-version` is one exact version (`6.7.1`), not a range or `latest`.
+- `--expose <service>:<port>` names the chart's Service, and its port, that
+  gets the service's address. The chart is installed with the service's name
+  as its release name, so a chart that names its Service after the release
+  makes one called like your service.
+- `--values` is a YAML file of the chart's values for every environment;
+  `--staging-values` and `--production-values` hold values for one
+  environment only, merged over them.
+- `--domain`, `--internal` and `--internal-staging` choose the address as for
+  any service. Other run options (`--replicas`, `--env`, ...) are refused: set
+  them in the chart's values.
+
+What a chart may do:
+
+- It may make only these kinds, and only in its own namespace
+  (`<service>-<environment>`): ConfigMap, Secret, Service, ServiceAccount,
+  PersistentVolumeClaim, Pod, Deployment, StatefulSet, DaemonSet, ReplicaSet,
+  Job, CronJob, HorizontalPodAutoscaler, PodDisruptionBudget and
+  NetworkPolicy. Not Roles or RoleBindings, ClusterRoles, custom resource
+  definitions, webhooks or namespaces, not routes or Ingresses (Forge gives
+  it its address), and not anything in another namespace. A chart that
+  needs more fails its deploy with the object's kind, such as `the chart of
+  tool in staging makes a Role`: turn it off in the chart's values (many
+  charts have `rbac.create: false` or `serviceAccount.create`), or ask your
+  platform team to install the chart by hand.
+- Its Services must be plain `ClusterIP` ones: not `LoadBalancer`,
+  `NodePort` or `ExternalName`, and with no `externalIPs`. Kubernetes refuses
+  the others in a service's namespace.
+- Its pods may not be privileged, use the node's network or files, or add
+  capabilities (Kubernetes' baseline pod security level); Kubernetes warns
+  about anything short of the restricted level.
+- It shares the namespace's quota (2 CPUs and 2 GiB of memory requested, 15
+  pods) with any database.
+
+`--deploy=false`, `--dry-run` and `-o json` work as for an image. Such a service
+has no preview environments. Deploy another version or new values with
+`forge deploy start podinfo --env staging --ref 6.8.0 --values podinfo.yaml`
+(see [Deploy and release](07-deploy-and-release.md#a-service-that-runs-a-chart)).
+
 ## File Templates: a Pull Request Instead of a Repo
 
 Some templates (`type: file` in `forge template get`) make no repo. They
@@ -241,6 +300,14 @@ and health path. The service's name starts as the repo's. The steps are Repo,
 Name and owner and Review, and the page ends with the pull request that adds
 Forge's CI to the repo: merge it there to deploy. It says when the pull
 request proposes a Dockerfile, so check that one before you merge.
+
+**From a Helm chart** runs a published chart, as `forge create --chart`
+does: give its repository, name and version, the Service that gets the
+address and its port, and, if you want them, its values as YAML (for every
+environment, and production's own). The service's name starts as the
+chart's. The steps are Chart, Name and owner and Review; Review has the same
+**Deploy it to staging once it is created** box as for an image. On a chart
+service's page, **Deploy** asks for a chart version instead of an image tag.
 
 The Team list shows your own teams first. The page refuses a team you are not
 in, unless you are an admin. If you are in no team, the **Create service**

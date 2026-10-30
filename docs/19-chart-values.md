@@ -235,6 +235,8 @@ Both are off by default. Both need `apps.domain` and `apps.pullSecret`.
 | `deploys.chart` | `oci://ghcr.io/showmino/forge-chart` | The chart services are deployed with; it is public |
 | `deploys.chartRevision` | `""` | Empty is this chart's `appVersion`. Changing it redeploys every service |
 | `deploys.excludedNamespaces` | `[]` | Existing namespaces named like `*-staging` or `*-production` that are not Forge's: Argo CD never deploys a service into them |
+| `deploys.charts.enabled` | `false` | `forge create --chart`: services that run a published Helm chart. Adds the ApplicationSet `forge-charts`, lets the services' Argo CD project make one AppProject per chart service (`forge-chart-<service>-<env>`, in `argocd`: workload kinds in its namespace only), labels every service's namespace with Kubernetes' baseline pod security, and adds the admission policy `forge-service-addresses` (Services in a service's namespace must be plain `ClusterIP`; needs Kubernetes 1.30 or later). Turning it off again removes every chart service's workloads: delete those services first |
+| `deploys.charts.allowedRepos` | `[]` (any) | Chart repositories such services may use, such as `[oci://ghcr.io/my-org/charts, https://charts.example.com]`. Other charts are refused. A repository on an address or a one-word host runs only when listed here |
 | `apps.publicDomains` | `[]` | Public addresses: domains a service may take its address under (`forge create --domain`, `run.domain` in `forge.yaml`), as `[{domain: example.com, zone: example-com}]`. The first is the default. The chart's Gateway gets a listener for each domain and its root; send the domains' hosts to it. With each such deploy Forge writes a DNS record (a kro `CloudflareRecordsApplication`) in the zone named by `zone`. Needs deploys and `apps.routing: gateway` |
 | `apps.dnsTunnel` | `production` | The tunnel those DNS records point at |
 | `argocdURL` | `""` | Argo CD's web address, to link a deployment to its Application (optional) |
@@ -541,6 +543,23 @@ deploys:
   # Existing namespaces named like *-staging or *-production that are not
   # Forge's: Argo CD never deploys a service into them.
   excludedNamespaces: []
+  # Services that run a published Helm chart (forge create --chart). Each
+  # environment gets a second Argo CD application, <service>-<env>-chart, in
+  # an AppProject of its own: namespaced resources only, in its namespace
+  # only, and none of the kinds that would take an address, a DNS record, a
+  # quota or a platform secret. Turning it on lets forge-services make
+  # AppProjects in the namespace argocd, labels every service's namespace with
+  # Kubernetes' baseline pod security, and adds the admission policy
+  # forge-service-addresses (Services there must be plain ClusterIPs; needs
+  # Kubernetes 1.30+). Turning it off again removes every chart service's
+  # workloads (the ApplicationSet goes, and its applications with it):
+  # delete those services first.
+  charts:
+    enabled: false
+    # Chart repositories such services may use, such as
+    # [oci://ghcr.io/stefanprodan/charts, https://charts.example.com]. Empty
+    # allows any.
+    allowedRepos: []
 
 # Resources: `forge resource` plans and applies a service's databases
 # (CloudNativePG clusters, the operator must be installed) with OpenTofu Jobs

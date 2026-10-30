@@ -94,30 +94,37 @@ forge cluster list -o json | jq '.clusters[].totals'
 
 ## forge create
 
-Create a service from a template or an image.
+Create a service from a template, an image or a Helm chart.
 
 ```text
-forge create <name> (--template <template>[@version] | --image <image>) --team <team> [flags]
+forge create <name> (--template <template>[@version] | --image <image> | --chart <chart>) --team <team> [flags]
 
---autoscaling-max int   run option: let production grow on CPU up to this many pods
---deploy                with --image: deploy it to staging and watch the deploy (default true)
---domain string         the public domain the service is reached under (run.domain); 'forge domain list' shows them, the default first
---dry-run               render and check without creating anything; print the files
---env stringArray       run option: an environment variable as NAME=value (repeatable)
---health string         with --image: the path its readiness is probed at (default /healthz)
---image string          an image to run instead of a template, such as nginx:1.27; the service gets no repo
---internal              reach the service only on the platform's network, with no public address (run.domain: none)
---internal-staging      reach staging only on the platform's network; production stays public (run.staging.public: false)
---job stringArray       run option: a cron job as name=<schedule>:<command>, e.g. 'cleanup=0 3 * * *:node cleanup.js' (repeatable)
---owner strings         owner email or handle (repeatable)
---port int              with --image: the port it listens on (default 8080)
---replicas int          run option: production's pod count (staging runs one)
---resources strings     run option: requests.cpu=100m,requests.memory=128Mi,limits.cpu=500m,limits.memory=512Mi
---secret stringArray    run option: a 1Password item as name=vaults/<vault>/items/<item>:VAR=field,VAR2=field (repeatable)
---set stringArray       template parameter as name=value (repeatable)
---team string           owning team
---template string       template to use, optionally with @version (see 'forge template list')
---writable strings      with --image: folders it writes besides /tmp, such as /var/cache/nginx (repeatable)
+--autoscaling-max int        run option: let production grow on CPU up to this many pods
+--chart string               a published Helm chart to run instead of a template, by name; the service gets no repo
+--chart-repo string          with --chart: its repository, oci://<registry>/<path> or https://<host>/<path>
+--chart-version string       with --chart: one exact version, such as 6.7.1
+--deploy                     with --image or --chart: deploy it to staging and watch the deploy (default true)
+--domain string              the public domain the service is reached under (run.domain); 'forge domain list' shows them, the default first
+--dry-run                    render and check without creating anything; print the files
+--env stringArray            run option: an environment variable as NAME=value (repeatable)
+--expose string              with --chart: the chart's Service that gets the address, as <service>:<port>
+--health string              with --image: the path its readiness is probed at (default /healthz)
+--image string               an image to run instead of a template, such as nginx:1.27; the service gets no repo
+--internal                   reach the service only on the platform's network, with no public address (run.domain: none)
+--internal-staging           reach staging only on the platform's network; production stays public (run.staging.public: false)
+--job stringArray            run option: a cron job as name=<schedule>:<command>, e.g. 'cleanup=0 3 * * *:node cleanup.js' (repeatable)
+--owner strings              owner email or handle (repeatable)
+--port int                   with --image: the port it listens on (default 8080)
+--production-values string   with --chart: a YAML file of values for production only, over --values
+--replicas int               run option: production's pod count (staging runs one)
+--resources strings          run option: requests.cpu=100m,requests.memory=128Mi,limits.cpu=500m,limits.memory=512Mi
+--secret stringArray         run option: a 1Password item as name=vaults/<vault>/items/<item>:VAR=field,VAR2=field (repeatable)
+--set stringArray            template parameter as name=value (repeatable)
+--staging-values string      with --chart: a YAML file of values for staging only, over --values
+--team string                owning team
+--template string            template to use, optionally with @version (see 'forge template list')
+--values string              with --chart: a YAML file of the chart's values
+--writable strings           with --image: folders it writes besides /tmp, such as /var/cache/nginx (repeatable)
 ```
 
 ```sh
@@ -127,6 +134,8 @@ forge create shop --template nextjs --team web --replicas 2 --env LOG_LEVEL=info
   --secret stripe=vaults/Apps/items/shop-stripe:STRIPE_KEY=credential --job 'cleanup=0 3 * * *:node cleanup.js'
 forge create payments --template go-grpc --team billing --dry-run
 forge create web --image nginxinc/nginx-unprivileged:1.27 --health / --team web
+forge create podinfo --chart podinfo --chart-repo oci://ghcr.io/stefanprodan/charts --chart-version 6.7.1 \
+  --expose podinfo:9898 --values podinfo.yaml --team web
 ```
 
 ## forge deploy
@@ -193,17 +202,19 @@ Deploy a ref of a service to an environment.
 ```text
 forge deploy start [service] --env staging|production [flags]
 
---bump string   for a first deploy of a commit to production: patch (default), minor or major
---dry-run       check and resolve without deploying
---env string    staging or production
---ref string    branch, tag or commit (default $GITHUB_SHA in GitHub Actions, else main); for a service without a repo, the image tag
---wait          watch the deploy until it ends (default true)
+--bump string     for a first deploy of a commit to production: patch (default), minor or major
+--dry-run         check and resolve without deploying
+--env string      staging or production
+--ref string      branch, tag or commit (default $GITHUB_SHA in GitHub Actions, else main); for a service without a repo, the image tag or the chart version
+--values string   for a service that runs a chart: a YAML file of new chart values for every environment
+--wait            watch the deploy until it ends (default true)
 ```
 
 ```sh
 forge deploy start payments --env staging
 forge deploy start --env staging --ref v1.4.2    # in a service repo
 forge deploy start web --env staging --ref 1.28  # a service that runs nginx
+forge deploy start podinfo --env staging --ref 6.8.0 --values podinfo.yaml
 ```
 
 ### forge deploy status

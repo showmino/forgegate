@@ -41,6 +41,15 @@ the files without changing anything.
   `main.py` or `app.py`). Read it before merging: the image runs as a non-root
   user with a read-only filesystem (only `/tmp` is writable), and the app must
   listen on `$PORT`. Anything else is refused with `add a Dockerfile`.
+- **Your own Dockerfile must run as a non-root user, by number.** Forge runs
+  every service as a non-root user with a read-only filesystem (only `/tmp` is
+  writable). Give the last stage a line such as `USER 65532:65532`; a name
+  (`USER node`) is not enough, since Kubernetes can only check a number. When
+  the last stage sets no `USER`, runs as root or names its user, the pull
+  request says so. If you merge it anyway, the deploy fails with
+  `image_runs_as_root` and says what to change: fix the Dockerfile and push
+  again. If the app writes outside `/tmp`, name those folders in forge.yaml's
+  `run.writable`.
 - **A repo with a `forge.yaml` already** is refused: register it with
   `forge service register` as in the steps below.
 - **The deploy job** must reach the Forge API, at the organization variable

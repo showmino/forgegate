@@ -218,6 +218,8 @@ Both are off by default. Both need `apps.domain` and `apps.pullSecret`.
 | Value | Default | What |
 | --- | --- | --- |
 | `imageRegistry` | `""` (ghcr.io) | Where your services' CI pushes images: a host and an optional path, no scheme. Forge runs `<imageRegistry>/<owner>/<service>:<commit>` |
+| `ci.runner` | `ubuntu-latest` | The GitHub Actions runner (`runs-on`) of the workflow `forge service connect` adds to a repo: where it builds the image |
+| `ci.deployRunner` | `""` (`ci.runner`) | Where that workflow's deploy job runs. It must reach the Forge API, at the organization variable `FORGE_API_URL`: a self-hosted runner on your network when the API is not public |
 | `allowedRegistries` | `""` (any) | Registry hosts a service made with `forge create --image` may run images from, comma separated, such as `ghcr.io,docker.io`. Other images are refused. A registry named by an address or a one-word name (`localhost:5000`) runs only when listed here |
 | `apps.domain` | `""` | A domain you control. Previews are at `*.preview.<domain>`, deploys at `*.staging.<domain>` and `*.production.<domain>`: point those names at your Gateway or ingress controller |
 | `apps.pullSecret` | `""` | A `dockerconfigjson` Secret in the release's namespace that can pull your services' images. Forge checks that an image exists with it and copies it into each service's namespace |

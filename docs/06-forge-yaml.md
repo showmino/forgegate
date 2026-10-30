@@ -96,6 +96,44 @@ port 8080 with the probe on `/healthz`.
 | `secrets` | 1Password items, given to the app as environment variables | [Run options](09-run-options.md) |
 | `jobs` | Cron jobs that run the service's image, with its env and secrets | [Run options](09-run-options.md) |
 
+## chart
+
+Only for a service without a repo that runs a published Helm chart
+([Create a service](04-create-a-service.md#run-a-helm-chart)); its forge.yaml
+lives in the deploy repo. With `chart`, only `run.domain`, `run.host` and
+`run.staging` apply, and `resources` is refused.
+
+### A Helm Chart
+
+```yaml
+apiVersion: forge.dev/v1
+service:
+  name: podinfo
+  team: web
+chart:
+  repo: oci://ghcr.io/stefanprodan/charts
+  name: podinfo
+  version: 6.7.1
+  values:
+    replicaCount: 2
+  expose:
+    service: podinfo
+    port: 9898
+  environments:
+    production:
+      values:
+        replicaCount: 3
+```
+
+| Field | Meaning |
+| --- | --- |
+| `repo` | The chart repository: `oci://<registry>/<path>` or `https://<host>/<path>`, with no login, query or trailing slash |
+| `name` | The chart's name in it |
+| `version` | One exact version, such as `6.7.1` (no ranges, no `latest`) |
+| `values` | The chart's values in every environment. At most 128 KiB with the environments' |
+| `expose.service`, `expose.port` | The chart's Service, and its port, that gets the service's address |
+| `environments.staging.values`, `environments.production.values` | Values of one environment, merged over `values` (maps key by key, anything else replaced) |
+
 ## resources
 
 Things a service needs besides its pods: today, one Postgres database. See

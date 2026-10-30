@@ -180,6 +180,37 @@ forge deploy promote web
   forge.yaml as it is.
 - **CI:** a CI token cannot deploy such a service, since it belongs to a repo.
 
+## A Service That Runs a Chart
+
+A service made with `forge create --chart` runs its chart's version: `--ref`
+is the version to run, and `--values` a YAML file of new chart values for
+every environment:
+
+```sh
+forge deploy start podinfo --env staging --ref 6.8.0
+forge deploy start podinfo --env staging --values podinfo.yaml
+forge deploy promote podinfo
+```
+
+- **The version:** the chart's (`6.8.0`); Forge finds it in the repository
+  first. Without `--ref`, the version its forge.yaml names.
+- **New version or values:** once deployed, written into that forge.yaml, so
+  the next plain `forge deploy start` runs them again. A deploy that fails
+  leaves forge.yaml as it was.
+- **The steps:** `commit` writes Forge's part (the address), `namespace` waits
+  for the namespace and makes it refuse privileged pods, `chart` writes the
+  chart and its values, then `address` and `sync` wait for both to be Synced
+  and Healthy. A chart that makes something Forge does not allow fails with
+  `chart_not_allowed` and the object's kind.
+- **Promote:** production runs staging's version and shared values, with
+  production's own values (`chart.environments.production.values`) from
+  forge.yaml as it is now.
+- **Rollback:** runs an earlier version with the values it had, and leaves
+  forge.yaml as it is.
+- **Status:** `forge deploy status` shows the chart's version and reports the
+  worse of Forge's part and the chart.
+- **CI:** a CI token cannot deploy such a service, since it belongs to a repo.
+
 ## In the Dashboard
 
 The **Overview** (the dashboard's home page, `https://forge.example.com/`)

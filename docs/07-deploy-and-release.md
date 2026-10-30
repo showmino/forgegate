@@ -186,10 +186,13 @@ The **Overview** (the dashboard's home page, `https://forge.example.com/`)
 opens with a status board: what `forge deploy status` shows, for every
 service at once.
 
-- A row for production, then one for staging, with a tile for each service
-  deployed there. A service that is degraded, not running or out of sync
-  comes first and is the only tile in colour. A healthy tile shows the
-  version (or commit) that runs and when it was deployed.
+- A row for production, then one for staging, with one line of tiles. A
+  service that is degraded, not running or out of sync comes first and is
+  the only tile in colour; then the services deployed most recently. A
+  healthy tile shows the version (or commit) that runs and when it was
+  deployed. When a row has more services than fit, its last tile says how
+  many more there are and opens the **Services** page, which lists every
+  service with its status in both environments.
 - Next to each row, how many services are unhealthy or out of sync, how many
   run there, and how many in the catalog are not deployed there yet.
 - Under the rows: the deploys started today and how many of the finished

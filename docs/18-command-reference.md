@@ -519,6 +519,27 @@ forge service address website --host @ --domain example.com --claim example.com
 forge service address website --clear
 ```
 
+### forge service connect
+
+Connect an existing repo: Forge builds and deploys it.
+
+```text
+forge service connect <repo> --team <team> [flags]
+
+--dry-run         check the repo and list the files; change nothing
+--health string   the path its readiness is probed at (default /healthz)
+--name string     the service's name (default: the repo's name)
+--owner strings   owner email or handle (repeatable)
+--port int        the port the app listens on (default 8080)
+--team string     owning team (it must be able to write to the repo)
+```
+
+```sh
+forge service connect github.com/my-org/tool --team web
+forge service connect github.com/my-org/legacy-api --name billing-api --team billing --port 9090 --health /status
+forge service connect github.com/my-org/tool --team web --dry-run
+```
+
 ### forge service delete
 
 Delete a service and everything it runs.

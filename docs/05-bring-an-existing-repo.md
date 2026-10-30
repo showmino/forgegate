@@ -7,6 +7,53 @@ sidebar_position: 6
 Use this when the app already exists, for example one deployed with a Helm
 chart or a `.kube/values.yaml`, and you want Forge to run it instead.
 
+## The Short Way: forge service connect
+
+If the repo has a Dockerfile, or is a Go, Node or Python app, one command
+does everything below for you:
+
+```sh
+forge service connect github.com/my-org/tool --team web
+forge service connect github.com/my-org/legacy-api --name billing-api --team billing --port 9090 --health /status
+```
+
+Forge registers the service and opens a pull request in the repo, on the
+branch `forge/connect`, that adds:
+
+| File | What it does |
+| --- | --- |
+| `forge.yaml` | Names the service, its team and its repo, with `run.port` and `run.health` |
+| `.github/workflows/forge.yml` | Builds the image `ghcr.io/my-org/<service>:<7-char sha>` on `main` and on pull requests from the repo, then deploys `main` to staging |
+| `.github/workflows/forge-release.yml` | Adds the version to the image when Forge releases a commit |
+| `Dockerfile` | Only when the repo has none: one for Go, Node or Python (below) |
+
+**Merging the pull request is the first deploy.** After that, every push to
+`main` deploys to staging, and `forge deploy promote <name>` takes it to
+production. Try it first with `--dry-run`, which checks the repo and lists
+the files without changing anything.
+
+- **Who may connect a repo:** a member of the owning team, when the team can
+  write to the repo (or a Forge admin, for any repo of the organization).
+  Forge does not change who can access the repo.
+- **No Dockerfile:** Forge proposes one when it finds `go.mod` (it builds
+  `main.go` at the root, or `cmd/<name>/`), `package.json` (with a `start`
+  script or a `main`), or `requirements.txt` / `pyproject.toml` (with
+  `main.py` or `app.py`). Read it before merging: the image runs as a non-root
+  user with a read-only filesystem (only `/tmp` is writable), and the app must
+  listen on `$PORT`. Anything else is refused with `add a Dockerfile`.
+- **A repo with a `forge.yaml` already** is refused: register it with
+  `forge service register` as in the steps below.
+- **The deploy job** must reach the Forge API, at the organization variable
+  `FORGE_API_URL`. Your platform team sets which runners the workflow uses
+  (`ci.runner` and `ci.deployRunner` in the chart). If your registry is not
+  `ghcr.io`, the pull request asks for the repo secrets
+  `FORGE_REGISTRY_USERNAME` and `FORGE_REGISTRY_PASSWORD`.
+- If the pull request cannot be opened (for example the branch
+  `forge/connect` is there already), the service is removed from the catalog
+  again: fix the cause and run the same command.
+
+The rest of this page is the long way, for a repo you want to set up by hand.
+
 ## What Forge Needs From the Repo
 
 | Need | Why |

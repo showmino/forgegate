@@ -234,6 +234,14 @@ new service and follows the deploy live. Untick it for `--deploy=false`. A
 refused image (such as one tagged `latest`) is shown with the reason, and
 nothing is created.
 
+**From a repo** connects a repo of your organization, as `forge service
+connect` does (see [Bring an existing repo](05-bring-an-existing-repo.md)):
+give the repository (`github.com/my-org/tool`), and if it needs them its port
+and health path. The service's name starts as the repo's. The steps are Repo,
+Name and owner and Review, and the page ends with the pull request that adds
+Forge's CI to the repo: merge it there to deploy. It says when the pull
+request proposes a Dockerfile, so check that one before you merge.
+
 The Team list shows your own teams first. The page refuses a team you are not
 in, unless you are an admin. If you are in no team, the **Create service**
 button is not there: ask an admin to add you to the team on GitHub.

@@ -114,6 +114,11 @@ staging public.
 - `--bump` is only for production. A staging deploy refuses it.
 - If the tag cannot be made, the deploy fails with `release_failed` before it
   changes anything. Run it again.
+- If the image CI built runs as root, or as a user given by name, the deploy
+  fails with `image_runs_as_root` before it changes anything: every service
+  runs as a non-root user, so its pod would not start. Give the last stage of
+  the Dockerfile a numeric `USER` (such as `USER 65532:65532`) and push again.
+  A preview checks the same.
 
 ## From CI
 

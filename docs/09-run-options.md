@@ -73,8 +73,29 @@ run:
     API_URL: https://ledger.example.com
 ```
 
-Forge also sets `PORT` (from `run.port`), and `DATABASE_URL` when the service
-has a database. Never put a secret in `env`: use `secrets`.
+Forge also sets:
+
+| Variable | Value |
+| --- | --- |
+| `PORT` | `run.port` |
+| `FORGE_ENVIRONMENT` | `staging`, `production` or `preview`: where this copy of the app runs |
+| `DATABASE_URL` | The connection string, when the service has a database (not in previews) |
+
+Never put a secret in `env`: use `secrets`.
+
+### Calling Another Service
+
+`env` is the same in staging and production, and a promotion copies staging
+as it is. So an address in `env` would make production call the staging copy
+of the other service. Build the address from `FORGE_ENVIRONMENT` instead, so
+each environment calls its own:
+
+```js
+const ledger = `http://ledger.${process.env.FORGE_ENVIRONMENT}.apps.example.com`;
+```
+
+A preview has no copy of the other service: point it at staging, or leave
+the feature off there.
 
 ## Secrets From 1Password
 

@@ -134,6 +134,20 @@ chart:
 | `expose.service`, `expose.port` | The chart's Service, and its port, that gets the service's address |
 | `environments.staging.values`, `environments.production.values` | Values of one environment, merged over `values` (maps key by key, anything else replaced) |
 
+## infrastructure
+
+Marks a repo of infrastructure code that deploys itself from GitHub Actions.
+See [Infrastructure Repos](21-infrastructure-repos.md).
+
+```yaml
+infrastructure:
+  tool: opentofu     # or terraform, bicep
+```
+
+Such a repo has no `run`, `chart` or `resources`, and Forge refuses to deploy
+or preview it. Its target and environments are not here: Forge keeps them, so
+editing this file cannot move the repo to another cloud account.
+
 ## resources
 
 Things a service needs besides its pods: today, one Postgres database. See

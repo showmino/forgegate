@@ -66,6 +66,12 @@ issues and settings. It cannot delete the repo or change who has access.
 Forge never lowers a role: a team that is already admin of the repo stays
 admin, and a move only takes away the role Maintain, never Admin.
 
+When repository protection is enabled, the owner team is also the only
+`CODEOWNERS` team for the repo. Its approval is required for pull requests to
+`main`. An approved alternate reviewer team can replace it; the alternate
+must already have Maintain access. Revoking that exception requires the
+alternate team to approve the PR that restores the owning team in `CODEOWNERS`.
+
 Only repos in your organization are changed. To check who has
 access, open the repo's **Settings → Collaborators and teams**, or run:
 

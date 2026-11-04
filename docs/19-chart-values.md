@@ -262,19 +262,62 @@ namespace `<release namespace>-runner`. Needs deploys. See
 
 Crossplane's GitHub provider requires pull requests on `main` for repositories
 created by Forge, existing and future. It permits no administrator or App
-bypass, force push or branch deletion. The initial scaffold is written before
-protection is installed. Connected repos are outside this scope.
+bypass, force push or branch deletion, and requires one approval from the
+repo's sole code-owner team. The initial scaffold is written before protection
+is installed. Connected repos are outside this scope unless explicitly adopted.
 
 | Value | Default | What |
 | --- | --- | --- |
-| `repositories.enabled` | `false` | Enable PR-only `main` updates; needs deploys and the namespaced `RepositoryRuleset` CRD |
+| `repositories.enabled` | `false` | Require PRs and owning-team approval on `main`; needs deploys and the namespaced `RepositoryRuleset` CRD |
 | `repositories.namespace` | `forge-repositories` | Namespace of the Crossplane rulesets |
 | `repositories.providerConfig` | `{kind: ClusterProviderConfig, name: github}` | GitHub provider config with repository administration access |
 
 Forge writes `repositories/<repo>/rules.yaml` in the deploy repo. The
 `forge-repositories` ApplicationSet syncs it. Startup backfills successful
-template creates in the audit log; dry runs and connected repos are excluded.
-Rules survive catalog deletion and use Crossplane's `Orphan` deletion policy.
+template creates in the audit log; dry runs are excluded. Existing repos
+without create provenance need an explicit
+`repositories/<repo>/adoption.yaml` record matching their immutable GitHub
+owner and repository IDs. The record must be opened by a member of the owning
+team (the `requestedBy` value must match the PR author) and merged through a
+PR approved by a configured platform team. `requestedAt` must be after the
+service was created.
+Connected repos without this record remain excluded. For eligible existing
+repos, Forge first proposes a PR making the owning team the sole code owner;
+it enables the rules only after that change reaches `main`.
+
+For an existing repo with no create provenance, the adoption record has this
+shape. Use the numeric owner and repository IDs from GitHub, not names:
+
+```yaml
+service: payments
+ownerID: 12345
+repoID: 67890
+reason: "Confirm the existing repository belongs to this Forge service"
+requestedBy: ana
+requestedAt: 2026-11-06T15:00:00Z
+```
+
+An alternate reviewer team can be requested in
+`review-exceptions/<repo>.yaml` in the deploy repo. A configured platform
+team member other than the requester must approve the last commit of the PR,
+and `requestedBy` must be the PR author. The alternate team must already have
+Maintain access. For example:
+
+```yaml
+service: payments
+team: billing
+alternateTeam: platform-reviewers
+reason: "The billing team needs temporary review coverage"
+requestedBy: ana
+requestedAt: 2026-11-06T15:00:00Z
+```
+
+Forge then proposes a repo PR making it the sole code owner; the rules
+continue to require one approval and code-owner review. Rules survive catalog
+deletion and use Crossplane's `Orphan` deletion policy.
+To revoke an exception, remove its deploy-repo record. Forge proposes a
+`CODEOWNERS` PR restoring the owning team; because the alternate team is still
+the current code owner on `main`, that team must approve the restoration PR.
 Infrastructure repos additionally require `infrastructure / pr-checks` from
 GitHub Actions, with the branch up to date. The gate requires validation and
 all chosen accounts' plan/what-if jobs to succeed.

@@ -258,6 +258,27 @@ namespace `<release namespace>-runner`. Needs deploys. See
 | `resources.runner.image.repository` | `ghcr.io/showmino/forge-runner` | The runner Jobs' image |
 | `resources.runner.image.tag` | `""` | Empty is `v<appVersion>` |
 
+## Repository Protection
+
+Crossplane's GitHub provider requires pull requests on `main` for repositories
+created by Forge, existing and future. It permits no administrator or App
+bypass, force push or branch deletion. The initial scaffold is written before
+protection is installed. Connected repos are outside this scope.
+
+| Value | Default | What |
+| --- | --- | --- |
+| `repositories.enabled` | `false` | Enable PR-only `main` updates; needs deploys and the namespaced `RepositoryRuleset` CRD |
+| `repositories.namespace` | `forge-repositories` | Namespace of the Crossplane rulesets |
+| `repositories.providerConfig` | `{kind: ClusterProviderConfig, name: github}` | GitHub provider config with repository administration access |
+
+Forge writes `repositories/<repo>/rules.yaml` in the deploy repo. The
+`forge-repositories` ApplicationSet syncs it. Startup backfills successful
+template creates in the audit log; dry runs and connected repos are excluded.
+Rules survive catalog deletion and use Crossplane's `Orphan` deletion policy.
+Infrastructure repos additionally require `infrastructure / pr-checks` from
+GitHub Actions, with the branch up to date. The gate requires validation and
+all chosen accounts' plan/what-if jobs to succeed.
+
 ## Infrastructure Repos
 
 Repos of infrastructure code (Bicep, OpenTofu) that deploy themselves from
@@ -297,6 +318,28 @@ infrastructure:
             TF_STATE_RESOURCE_GROUP: rg-state
             TF_STATE_STORAGE_ACCOUNT: stexamplestate
           maxRepos: 20
+          plan:                              # a different, read-only identity
+            secret: target-azure-production-plan
+            githubSecrets:
+              AZURE_TENANT_ID: tenantId
+              AZURE_SUBSCRIPTION_ID: subscriptionId
+              AZURE_CLIENT_ID: clientId
+            githubVariables:
+              TF_STATE_RESOURCE_GROUP: rg-state
+              TF_STATE_STORAGE_ACCOUNT: stexamplestate
+              AZURE_LOCATION: swedencentral
+            access: |
+              apiVersion: managedidentity.azure.m.upbound.io/v1beta1
+              kind: FederatedIdentityCredential
+              metadata:
+                name: {{ .Repo }}-{{ .Environment }}-plan
+              spec:
+                forProvider:
+                  audience: [api://AzureADTokenExchange]
+                  issuer: https://token.actions.githubusercontent.com
+                  subject: {{ .Subject }}
+                  parentId: /subscriptions/<id>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<plan-identity>
+                  resourceGroupName: <rg>
           access: |                          # Crossplane objects for one repo
             apiVersion: managedidentity.azure.m.upbound.io/v1beta1
             kind: FederatedIdentityCredential
@@ -315,6 +358,15 @@ infrastructure:
 `.Subject` (the OIDC subject of the repo's runs through the shared workflow).
 Each kind it makes must be in `accessKinds`. If an Argo CD ApplicationSet
 renders your values, write the `{{ }}` so that it passes them through.
+
+Each environment's `plan` uses a different Kubernetes Secret and identity
+from deployment. It has `secret`, `githubSecrets`, `githubVariables` and
+`access`; its `.Subject` ends in `:pull_request`, not `:environment:production`.
+Crossplane writes repository settings named `FORGE_PLAN_<ENV>_<NAME>` and
+the JSON array `FORGE_PLAN_ENVIRONMENTS`. Plans use no GitHub environment;
+production-only repositories need no staging account. See
+[Infrastructure Repos](21-infrastructure-repos.md#for-the-platform-team)
+for the read-only Azure roles.
 
 ## Service Secrets
 
@@ -642,4 +694,3 @@ clusters:
   # Secrets in the namespace argocd. forge-api reads exactly those.
   remote: []
 ```
-

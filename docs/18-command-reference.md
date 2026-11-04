@@ -223,6 +223,9 @@ forge cluster list -o json | jq '.clusters[].totals'
 ## forge create
 
 Create a service from a template, an image or a Helm chart.
+With repository protection enabled, a template-created repo requires PRs on
+`main`. An unfinished protection setup after registration keeps the repo and
+reports what needs attention; failures before registration roll the repo back.
 
 ```text
 forge create <name> (--template <template>[@version] | --image <image> | --chart <chart>) --team <team> [--target <target>] [flags]

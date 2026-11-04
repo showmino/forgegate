@@ -68,6 +68,12 @@ When it ends, the CI of the new repo is already running. About five minutes late
 forge deploy status payments
 ```
 
+When repository protection is enabled, the repo starts with a `CODEOWNERS`
+file naming the owning team for every file. A pull request to `main` needs at
+least one approval from that team, as well as any required status checks.
+Forge does not enable the ruleset until the initial files, including
+`CODEOWNERS`, are on `main`.
+
 ## Common Variations
 
 ### Set Template Parameters

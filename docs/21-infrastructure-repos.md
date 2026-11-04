@@ -42,6 +42,9 @@ Forge then:
 4. Lets the shared workflow sign in to each account.
 5. With repository protection enabled, requires a pull request for `main`
    and successful infrastructure PR checks, without administrator bypass.
+   The owning team must approve the pull request; see
+   [the owner team's access](12-catalog.md#the-owner-teams-access-to-the-repo)
+   for how a reviewed alternate team can be used.
 
 In the dashboard, pick the template on the Create page: it asks for the
 target (only those open to your team) and the environments.

@@ -411,6 +411,11 @@ production-only repositories need no staging account. See
 [Infrastructure Repos](21-infrastructure-repos.md#for-the-platform-team)
 for the read-only Azure roles.
 
+For Bicep resource-group scope, set `BICEP_DEPLOYMENT_SCOPE: resourceGroup`
+in both the environment's `githubVariables` and its `plan.githubVariables`.
+The plan setting becomes `FORGE_PLAN_<ENV>_BICEP_DEPLOYMENT_SCOPE` and
+overrides the repository-wide setting for that environment's PR what-if.
+
 ## Service Secrets
 
 `run.secrets` in a service's `forge.yaml` is off until `secrets.vaults`

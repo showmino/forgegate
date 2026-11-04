@@ -99,6 +99,27 @@ PR what-if uses ARM deployment what-if with read-only validation, not stack
 what-if. It does not show stack unmanage deletions, so review resources
 removed from the template as well as the what-if output.
 
+Bicep uses subscription scope by default. To limit deployments to pre-existing
+resource groups, set the repository variable `BICEP_DEPLOYMENT_SCOPE` to
+`resourceGroup` and set `targetScope = 'resourceGroup'` in `main.bicep`. This
+repository-wide setting applies to every environment. Set `AZURE_RESOURCE_GROUP`
+in each GitHub deployment environment, and set
+`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP` as a repository variable for each
+environment in `FORGE_PLAN_ENVIRONMENTS`. The plan and deployment identities
+can then be scoped to their respective resource groups. The template must not
+try to create its containing resource group. In this mode, the stack deletes
+unmanaged resources and uses `denyDelete`, but does not manage or delete the
+containing group. Leaving `BICEP_DEPLOYMENT_SCOPE` unset preserves the
+subscription-scoped behavior.
+
+When Forge configures the repo's environments through an infrastructure
+target, the scope can instead be set per environment: set
+`BICEP_DEPLOYMENT_SCOPE` in that environment's `githubVariables` and in its
+`plan.githubVariables`. Forge prefixes the plan setting as
+`FORGE_PLAN_<ENV>_BICEP_DEPLOYMENT_SCOPE`; it takes precedence over the
+repository-wide setting for that environment's PR what-if. The deployment
+environment setting takes precedence for its deployment.
+
 Terraform/OpenTofu PR plans read a state snapshot into a local backend without
 locking or initializing remote state. A missing blob means no prior deploy;
 other storage failures stop the plan. Deployment replans and acquires the
@@ -183,7 +204,10 @@ ARM `Microsoft.Resources/deployments/whatIf/action` and
 `Microsoft.Resources/deployments/validate/action`, and Storage Blob Data Reader
 on the `tfstate` container. Bicep what-if uses `providerNoRbac` validation;
 Terraform/OpenTofu PR plans use `-lock=false`, so no state write or lease
-permission is granted. Do not assign Contributor or Owner to this identity.
+permission is granted. In resource-group-scoped Bicep repos, set the
+`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP` repository variable and scope the plan
+identity's resource permissions to that group. Do not assign Contributor or
+Owner to this identity.
 Its Azure federated credentials also have the 20-per-identity limit; keep
 the target's `maxRepos` within the capacities of both identities.
 

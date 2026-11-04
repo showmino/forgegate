@@ -1,0 +1,45 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    uses: ./.github/workflows/image.yml
+    permissions:
+      contents: read
+      packages: write
+
+  # Only main can obtain this service's staging deployment identity.
+  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: forge-deploy-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      FORGE_API_URL: https://forge-api.showmino.com
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the forge CLI from the Forge API
+        run: |
+          case $(uname -m) in
+            x86_64) arch=amd64 ;;
+            aarch64|arm64) arch=arm64 ;;
+            *) echo "::error::unsupported runner architecture $(uname -m)"; exit 1 ;;
+          esac
+          url="$FORGE_API_URL/cli/forge-linux-$arch"
+          echo "downloading $url"
+          curl -fsS --retry 3 --max-time 120 -o "$RUNNER_TEMP/forge" "$url"
+          chmod +x "$RUNNER_TEMP/forge"
+          "$RUNNER_TEMP/forge" version
+      - name: Deploy to staging
+        run: '"$RUNNER_TEMP/forge" deploy start --env staging'

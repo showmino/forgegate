@@ -40,10 +40,14 @@ npm run serve       # serve build/ locally
 
 ## Ship
 
-CI builds every pull request (`npm run build` fails on a broken link). On
-`main` it pushes `ghcr.io/showmino/forgegate:<short-sha>`, then deploys that
-commit to staging through Forge's public API, logging in with the job's
-GitHub OIDC token. The repo is public, so its jobs run on GitHub's runners.
+The `ci` workflow checks every pull request (`npm run build` fails on a
+broken link) and builds its image. Only same-repo branches publish it. The separate
+`deploy` workflow runs only on pushes to `main`: it publishes
+`ghcr.io/showmino/forgegate:<short-sha>`, then deploys that commit to staging
+through Forge's public API, logging in with the job's GitHub OIDC token.
+Both workflows use the same reusable image build. Deployment is not a
+skipped PR check, and PR jobs receive no deployment identity. The repo is
+public, so its jobs run on GitHub's runners.
 
 - `forge deploy status forgegate`: what runs where.
 - `forge deploy promote forgegate`: staging to production.

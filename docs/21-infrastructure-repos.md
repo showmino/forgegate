@@ -24,7 +24,7 @@ forge create infra-network --template opentofu --target azure --team platform
 
 - `--template` is an infrastructure template, such as `opentofu` or `bicep`
   (`forge template list` shows the type of each).
-- `--target` is where it deploys.
+- `--target` is where it deploys. `forge template targets` lists the targets.
 - `--environments staging,production` picks the environments. The default is
   every environment the target has. `--environments production` makes a repo
   with production only.
@@ -39,7 +39,11 @@ Forge then:
    accepts runs from `main`.
 4. Lets the shared workflow sign in to each account.
 
-`forge service get infra-network` shows the target and the environments.
+In the dashboard, pick the template on the Create page: it asks for the
+target (only those open to your team) and the environments.
+
+`forge service get infra-network`, and the repo's page in the dashboard, show
+the target, the environments and any exception.
 Forge refuses a target your team may not use, an environment the target does
 not have, and a target that is full. The refusal names the reason.
 
@@ -67,7 +71,8 @@ environments: those are kept by Forge.
    approvals/apr_3950f08e3db4a99f asks team platform to approve 1a2b3c4 in production
    ```
 
-3. Someone else on your team approves it:
+3. Someone else on your team approves it, on the dashboard's **Approvals**
+   page or with the CLI:
 
    ```sh
    forge approval list --state pending

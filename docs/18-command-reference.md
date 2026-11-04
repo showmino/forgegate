@@ -891,6 +891,19 @@ forge template list --tag go
 forge template list --version v1.0.0 -o json | jq -r '.templates[].name'
 ```
 
+### forge template targets
+
+List the targets infrastructure templates deploy to.
+
+```text
+forge template targets [flags]
+```
+
+```sh
+forge template targets
+forge create infra-network --template opentofu --target azure --team platform
+```
+
 ## forge auth
 
 ### forge auth can

@@ -60,6 +60,11 @@ options: [replicas, resources, env, secrets, jobs, autoscaling]
   for this template (see [Run options](09-run-options.md)).
 - `type: file` with `target: <org>/<repo>` makes it a file template: the
   skeleton is added to that repo by pull request.
+- `type: infrastructure` makes it an infrastructure template: a repo of
+  infrastructure code that deploys itself, for a target (see
+  [Infrastructure Repos](21-infrastructure-repos.md)). Its `forge.yaml` must
+  have `infrastructure.tool` (`opentofu`, `terraform` or `bicep`) and no
+  `run`, `chart` or `resources`; it takes no `options`.
 
 In `skeleton/`, file names and contents can use:
 

@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
         'catalog',
         'service-docs',
         'resources',
+        'infrastructure-repos',
         'audit-log',
         'templates',
         'scripting-and-troubleshooting',

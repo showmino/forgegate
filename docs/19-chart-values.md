@@ -258,6 +258,64 @@ namespace `<release namespace>-runner`. Needs deploys. See
 | `resources.runner.image.repository` | `ghcr.io/showmino/forge-runner` | The runner Jobs' image |
 | `resources.runner.image.tag` | `""` | Empty is `v<appVersion>` |
 
+## Infrastructure Repos
+
+Repos of infrastructure code (Bicep, OpenTofu) that deploy themselves from
+GitHub Actions to a target, with production approved in Forge. Needs deploys,
+Crossplane with its GitHub provider and a provider per cloud, and the GitHub
+App's Actions: write. See [Infrastructure Repos](21-infrastructure-repos.md).
+
+| Value | Default | What |
+| --- | --- | --- |
+| `infrastructure.enabled` | `false` | Turn it on |
+| `infrastructure.namespace` | `forge-infrastructure` | Where the Crossplane objects and the targets' Secrets live |
+| `infrastructure.providerConfig` | `{kind: ClusterProviderConfig, name: github}` | The Crossplane GitHub provider's config |
+| `infrastructure.workflow` | `""` | Required: the shared workflow, `<owner>/<repo>/.github/workflows/<file>.yml@refs/heads/<branch>` |
+| `infrastructure.repoWorkflow` | `deploy.yml` | The repos' workflow Forge starts once production is approved |
+| `infrastructure.accessKinds` | `[]` | The kinds the targets' `access` make, as `<group>/<Kind>` |
+| `infrastructure.targets` | `[]` | The targets (below) |
+
+A target, with one entry per environment (`staging`, `production`):
+
+```yaml
+infrastructure:
+  enabled: true
+  workflow: my-org/forge-workflows/.github/workflows/infrastructure.yml@refs/heads/main
+  accessKinds: [managedidentity.azure.m.upbound.io/FederatedIdentityCredential]
+  targets:
+    - name: azure
+      title: Azure
+      teams: []                        # empty: every team
+      environments:
+        production:
+          secret: target-azure-production    # a Secret in infrastructure.namespace
+          githubSecrets:                     # environment secret: key in that Secret
+            AZURE_TENANT_ID: tenantId
+            AZURE_SUBSCRIPTION_ID: subscriptionId
+            AZURE_CLIENT_ID: clientId
+          githubVariables:                   # environment variable: value
+            TF_STATE_RESOURCE_GROUP: rg-state
+            TF_STATE_STORAGE_ACCOUNT: stexamplestate
+          maxRepos: 20
+          access: |                          # Crossplane objects for one repo
+            apiVersion: managedidentity.azure.m.upbound.io/v1beta1
+            kind: FederatedIdentityCredential
+            metadata:
+              name: {{ .Repo }}-{{ .Environment }}
+            spec:
+              forProvider:
+                audience: [api://AzureADTokenExchange]
+                issuer: https://token.actions.githubusercontent.com
+                subject: {{ .Subject }}
+                parentId: /subscriptions/<id>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<identity>
+                resourceGroupName: <rg>
+```
+
+`access` is a Go template with `.Org`, `.Repo`, `.Team`, `.Environment` and
+`.Subject` (the OIDC subject of the repo's runs through the shared workflow).
+Each kind it makes must be in `accessKinds`. If an Argo CD ApplicationSet
+renders your values, write the `{{ }}` so that it passes them through.
+
 ## Service Secrets
 
 `run.secrets` in a service's `forge.yaml` is off until `secrets.vaults`

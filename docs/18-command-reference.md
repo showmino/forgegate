@@ -21,6 +21,134 @@ for the current release. The other pages explain when to use which.
 -v, --verbose            print request IDs and where settings came from
 ```
 
+## forge approval
+
+Approve the production runs of infrastructure repos. See [Infrastructure Repos](21-infrastructure-repos.md).
+
+### forge approval approve
+
+Approve a production run, and start it.
+
+```text
+forge approval approve <approval> [flags]
+
+--reason string   why, for the audit log
+```
+
+```sh
+forge approval approve apr_3950f08e3db4a99f --reason 'plan reviewed'
+```
+
+### forge approval claim
+
+Claim an approved production run (in the shared workflow). It prints the commit to deploy.
+
+```text
+forge approval claim <approval> [flags]
+```
+
+```sh
+commit=$(forge approval claim "$APPROVAL")
+```
+
+### forge approval exception list
+
+List the exceptions, and whether each holds.
+
+```text
+forge approval exception list [flags]
+
+--service string   only this service's exception
+```
+
+```sh
+forge approval exception list
+forge approval exception list --service infra-network -o json
+```
+
+### forge approval exception request
+
+Ask the platform team for an exception.
+
+```text
+forge approval exception request <service> [flags]
+
+--reason string   why, for the platform team
+```
+
+```sh
+forge approval exception request infra-network --reason 'I am the only one on the team'
+```
+
+### forge approval exception revoke
+
+Open the pull request that removes an exception.
+
+```text
+forge approval exception revoke <service> [flags]
+
+--reason string   why, for the platform team
+```
+
+```sh
+forge approval exception revoke infra-network --reason 'Bo joined the team'
+```
+
+### forge approval get
+
+Show one approval.
+
+```text
+forge approval get <approval> [flags]
+```
+
+```sh
+forge approval get apr_3950f08e3db4a99f
+```
+
+### forge approval list
+
+List approvals, newest first.
+
+```text
+forge approval list [flags]
+
+--limit int        at most this many (up to 200) (default 50)
+--service string   only this service's approvals
+--state string     only approvals in this state: pending, approved, rejected, superseded or claimed
+```
+
+```sh
+forge approval list --state pending
+forge approval list --service infra-network -o json
+```
+
+### forge approval reject
+
+Reject a production run.
+
+```text
+forge approval reject <approval> [flags]
+
+--reason string   why, for the audit log
+```
+
+```sh
+forge approval reject apr_3950f08e3db4a99f --reason 'deletes the subnet'
+```
+
+### forge approval request
+
+Ask for production's approval (in the shared workflow). `-o name` prints the approval's name.
+
+```text
+forge approval request [flags]
+```
+
+```sh
+forge approval request -o name
+```
+
 ## forge audit
 
 ### forge audit get
@@ -97,7 +225,7 @@ forge cluster list -o json | jq '.clusters[].totals'
 Create a service from a template, an image or a Helm chart.
 
 ```text
-forge create <name> (--template <template>[@version] | --image <image> | --chart <chart>) --team <team> [flags]
+forge create <name> (--template <template>[@version] | --image <image> | --chart <chart>) --team <team> [--target <target>] [flags]
 
 --autoscaling-max int        run option: let production grow on CPU up to this many pods
 --chart string               a published Helm chart to run instead of a template, by name; the service gets no repo
@@ -107,6 +235,7 @@ forge create <name> (--template <template>[@version] | --image <image> | --chart
 --domain string              the public domain the service is reached under (run.domain); 'forge domain list' shows them, the default first
 --dry-run                    render and check without creating anything; print the files
 --env stringArray            run option: an environment variable as NAME=value (repeatable)
+--environments strings       with an infrastructure template: its environments, staging and/or production (default: every one the target has)
 --expose string              with --chart: the chart's Service that gets the address, as <service>:<port>
 --health string              with --image: the path its readiness is probed at (default /healthz)
 --image string               an image to run instead of a template, such as nginx:1.27; the service gets no repo
@@ -121,6 +250,7 @@ forge create <name> (--template <template>[@version] | --image <image> | --chart
 --secret stringArray         run option: a 1Password item as name=vaults/<vault>/items/<item>:VAR=field,VAR2=field (repeatable)
 --set stringArray            template parameter as name=value (repeatable)
 --staging-values string      with --chart: a YAML file of values for staging only, over --values
+--target string              with an infrastructure template: the target it deploys to, a set of cloud accounts
 --team string                owning team
 --template string            template to use, optionally with @version (see 'forge template list')
 --values string              with --chart: a YAML file of the chart's values
@@ -133,6 +263,7 @@ forge create ledger --template go-grpc@v1.0.0 --team billing --owner ana@example
 forge create shop --template nextjs --team web --replicas 2 --env LOG_LEVEL=info \
   --secret stripe=vaults/Apps/items/shop-stripe:STRIPE_KEY=credential --job 'cleanup=0 3 * * *:node cleanup.js'
 forge create payments --template go-grpc --team billing --dry-run
+forge create infra-network --template opentofu --target azure --environments production --team platform
 forge create web --image nginxinc/nginx-unprivileged:1.27 --health / --team web
 forge create podinfo --chart podinfo --chart-repo oci://ghcr.io/stefanprodan/charts --chart-version 6.7.1 \
   --expose podinfo:9898 --values podinfo.yaml --team web
@@ -758,6 +889,19 @@ forge template list [flags]
 forge template list
 forge template list --tag go
 forge template list --version v1.0.0 -o json | jq -r '.templates[].name'
+```
+
+### forge template targets
+
+List the targets infrastructure templates deploy to.
+
+```text
+forge template targets [flags]
+```
+
+```sh
+forge template targets
+forge create infra-network --template opentofu --target azure --team platform
 ```
 
 ## forge auth

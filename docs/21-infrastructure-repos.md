@@ -112,6 +112,14 @@ unmanaged resources and uses `denyDelete`, but does not manage or delete the
 containing group. Leaving `BICEP_DEPLOYMENT_SCOPE` unset preserves the
 subscription-scoped behavior.
 
+When Forge configures the repo's environments through an infrastructure
+target, the scope can instead be set per environment: set
+`BICEP_DEPLOYMENT_SCOPE` in that environment's `githubVariables` and in its
+`plan.githubVariables`. Forge prefixes the plan setting as
+`FORGE_PLAN_<ENV>_BICEP_DEPLOYMENT_SCOPE`; it takes precedence over the
+repository-wide setting for that environment's PR what-if. The deployment
+environment setting takes precedence for its deployment.
+
 Terraform/OpenTofu PR plans read a state snapshot into a local backend without
 locking or initializing remote state. A missing blob means no prior deploy;
 other storage failures stop the plan. Deployment replans and acquires the

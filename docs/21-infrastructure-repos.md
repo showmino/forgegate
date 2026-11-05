@@ -127,6 +127,11 @@ Terraform/OpenTofu PR plans read a state snapshot into a local backend without
 locking or initializing remote state. A missing blob means no prior deploy;
 other storage failures stop the plan. Deployment replans and acquires the
 state lock after merge, so a PR plan is not a saved apply authorization.
+Plans and deployments use the same state key for each environment. The
+platform can set the optional `TF_STATE_KEY_SUFFIX` environment variable in a
+target to isolate state blobs, without changing how existing targets are
+handled. Do not change a suffix for a state that already contains resources
+unless its state is migrated.
 
 The person who pushed the commit, or who re-ran the job, cannot approve it:
 

@@ -140,7 +140,10 @@ This opens a pull request in the deploy repo. Once a platform team member
 other than you approves it and squash-merges it, your team may approve its
 own production runs of that repo. Forge checks the pull request and the
 approval on GitHub each time, so a file that got there some other way does not
-count.
+count. While the exception is active, pull requests to that service still
+require a pull request and all required checks, but no approving review. The
+exception grant and revocation are themselves reviewed pull requests; revoking
+the exception restores the normal review requirement.
 
 ```sh
 forge approval exception list

@@ -199,6 +199,12 @@ Infrastructure repos are off until you set `infrastructure.*` in the chart
   subject, ending in `:pull_request`.
 - The shared workflow, in a repository your organization's repos may call
   workflows from (`infrastructure.workflow`).
+- Runners for that workflow with the tools it calls: the Azure CLI with
+  Bicep, OpenTofu or Terraform, and `unzip`. Put them in the runner image
+  with pinned versions. For an actions-runner-controller scale set, build the
+  image `FROM ghcr.io/actions/actions-runner` so its Docker-in-Docker mode
+  still finds `/home/runner/externals`, and point every job's `runs-on` at
+  that scale set.
 - The GitHub App's **Actions: write**, for the repo's OIDC setting and to start
   production runs.
 - `repositories.enabled: true`, Crossplane's namespaced GitHub

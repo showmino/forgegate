@@ -345,7 +345,12 @@ A target, with one entry per environment (`staging`, `production`):
 infrastructure:
   enabled: true
   workflow: my-org/forge-workflows/.github/workflows/infrastructure.yml@refs/heads/main
-  accessKinds: [managedidentity.azure.m.upbound.io/FederatedIdentityCredential]
+  accessKinds:
+  - azure.forge.dev/AzureInfrastructureEnvironment
+  - actions.github.m.upbound.io/EnvironmentSecret
+  - actions.github.m.upbound.io/EnvironmentVariable
+  - actions.github.m.upbound.io/ActionsSecret
+  - actions.github.m.upbound.io/ActionsVariable
   targets:
     - name: azure
       title: Azure
@@ -356,51 +361,77 @@ infrastructure:
           githubSecrets:                     # environment secret: key in that Secret
             AZURE_TENANT_ID: tenantId
             AZURE_SUBSCRIPTION_ID: subscriptionId
-            AZURE_CLIENT_ID: clientId
           githubVariables:                   # environment variable: value
             TF_STATE_RESOURCE_GROUP: rg-state
             TF_STATE_STORAGE_ACCOUNT: stexamplestate
+            AZURE_LOCATION: swedencentral
           maxRepos: 20
           plan:                              # a different, read-only identity
             secret: target-azure-production-plan
             githubSecrets:
               AZURE_TENANT_ID: tenantId
               AZURE_SUBSCRIPTION_ID: subscriptionId
-              AZURE_CLIENT_ID: clientId
             githubVariables:
               TF_STATE_RESOURCE_GROUP: rg-state
               TF_STATE_STORAGE_ACCOUNT: stexamplestate
               AZURE_LOCATION: swedencentral
             access: |
-              apiVersion: managedidentity.azure.m.upbound.io/v1beta1
-              kind: FederatedIdentityCredential
+              apiVersion: actions.github.m.upbound.io/v1alpha1
+              kind: ActionsSecret
               metadata:
-                name: {{ .Repo }}-{{ .Environment }}-plan
+                name: {{ .Repo }}-{{ .Environment }}-plan-azure-client-id
               spec:
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: github
                 forProvider:
-                  audience: [api://AzureADTokenExchange]
-                  issuer: https://token.actions.githubusercontent.com
-                  subject: {{ .Subject }}
-                  parentId: /subscriptions/<id>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<plan-identity>
-                  resourceGroupName: <rg>
+                  repository: {{ .Repo }}
+                  secretName: FORGE_PLAN_{{ upper .Environment }}_AZURE_CLIENT_ID
+                  plaintextValueSecretRef:
+                    name: {{ .Repo }}-{{ .Environment }}-azure-ids
+                    key: planClientId
           access: |                          # Crossplane objects for one repo
-            apiVersion: managedidentity.azure.m.upbound.io/v1beta1
-            kind: FederatedIdentityCredential
+            apiVersion: azure.forge.dev/v1alpha1
+            kind: AzureInfrastructureEnvironment
             metadata:
               name: {{ .Repo }}-{{ .Environment }}
             spec:
-              forProvider:
-                audience: [api://AzureADTokenExchange]
-                issuer: https://token.actions.githubusercontent.com
-                subject: {{ .Subject }}
-                parentId: /subscriptions/<id>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<identity>
-                resourceGroupName: <rg>
+              crossplane:
+                compositionRef:
+                  name: azure-infrastructure-environment
+              writeConnectionSecretToRef:
+                name: {{ .Repo }}-{{ .Environment }}-azure-ids
+              parameters:
+                location: swedencentral
+                resourceGroupName: rg-{{ .Repo }}-{{ .Environment }}
+                deployIdentityName: id-{{ .Repo }}-{{ .Environment }}-deploy
+                planIdentityName: id-{{ .Repo }}-{{ .Environment }}-plan
+                planRoleName: forge-plan-{{ .RepoID }}-{{ .Environment }}
+                deploySubject: {{ .Subject }}
+                planSubject: {{ .PlanSubject }}
+                stateContainerName: forge-{{ .RepoID }}-{{ .Environment }}
+                stateStorageAccountId: /subscriptions/<id>/resourceGroups/rg-state/providers/Microsoft.Storage/storageAccounts/stexamplestate
 ```
 
-`access` is a Go template with `.Org`, `.Repo`, `.Team`, `.Environment` and
-`.Subject` (the OIDC subject of the repo's runs through the shared workflow).
-Each kind it makes must be in `accessKinds`. If an Argo CD ApplicationSet
-renders your values, write the `{{ }}` so that it passes them through.
+The Azure composition creates a new `rg-<repo>-<environment>` resource group
+and separate deploy and plan identities in it. It also creates their
+workflow-specific GitHub OIDC credentials and a private state container named
+`forge-<repo-id>-<environment>`. The deploy identity gets
+`Storage Blob Data Contributor` and the plan identity gets
+`Storage Blob Data Reader` on that container only. The connection Secret
+holds the generated client IDs; the deploy `EnvironmentSecret` and plan
+`ActionsSecret` publish them as `AZURE_CLIENT_ID` and
+`FORGE_PLAN_<ENV>_AZURE_CLIENT_ID`, respectively. The target also publishes
+the resource group and container names as `AZURE_RESOURCE_GROUP`,
+`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP`, `TF_STATE_CONTAINER` and
+`FORGE_PLAN_<ENV>_TF_STATE_CONTAINER`.
+
+`access` is a Go template with `.Org`, `.Repo`, `.Team`, `.Environment`,
+`.RepoID`, `.Subject` and `.PlanSubject` (the last two are OIDC subjects for
+deployment and pull-request runs through the shared workflow). `.RepoID` is
+GitHub's stable numeric ID for the repository. Each kind it makes must be in
+`accessKinds`. If an Argo CD ApplicationSet renders your values, write the
+`{{ }}` so that it passes them through.
 
 Each environment's `plan` uses a different Kubernetes Secret and identity
 from deployment. It has `secret`, `githubSecrets`, `githubVariables` and
@@ -411,10 +442,12 @@ production-only repositories need no staging account. See
 [Infrastructure Repos](21-infrastructure-repos.md#for-the-platform-team)
 for the read-only Azure roles.
 
-For Bicep resource-group scope, set `BICEP_DEPLOYMENT_SCOPE: resourceGroup`
+For Azure service resource groups, set `BICEP_DEPLOYMENT_SCOPE: resourceGroup`
 in both the environment's `githubVariables` and its `plan.githubVariables`.
 The plan setting becomes `FORGE_PLAN_<ENV>_BICEP_DEPLOYMENT_SCOPE` and
-overrides the repository-wide setting for that environment's PR what-if.
+overrides the repository-wide setting for that environment's PR what-if. The
+Azure composition supplies the per-service resource group names to the
+deployment and plan workflows.
 
 ## Service Secrets
 

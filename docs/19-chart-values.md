@@ -375,21 +375,6 @@ infrastructure:
               TF_STATE_RESOURCE_GROUP: rg-state
               TF_STATE_STORAGE_ACCOUNT: stexamplestate
               AZURE_LOCATION: swedencentral
-            access: |
-              apiVersion: actions.github.m.upbound.io/v1alpha1
-              kind: ActionsSecret
-              metadata:
-                name: {{ .Repo }}-{{ .Environment }}-plan-azure-client-id
-              spec:
-                providerConfigRef:
-                  kind: ClusterProviderConfig
-                  name: github
-                forProvider:
-                  repository: {{ .Repo }}
-                  secretName: FORGE_PLAN_{{ upper .Environment }}_AZURE_CLIENT_ID
-                  plaintextValueSecretRef:
-                    name: {{ .Repo }}-{{ .Environment }}-azure-ids
-                    key: planClientId
           access: |                          # Crossplane objects for one repo
             apiVersion: azure.forge.dev/v1alpha1
             kind: AzureInfrastructureEnvironment
@@ -411,6 +396,9 @@ infrastructure:
                 planSubject: {{ .PlanSubject }}
                 stateContainerName: forge-{{ .RepoID }}-{{ .Environment }}
                 stateStorageAccountId: /subscriptions/<id>/resourceGroups/rg-state/providers/Microsoft.Storage/storageAccounts/stexamplestate
+                githubRepository: {{ .Repo }}
+                githubEnvironment: {{ .Environment }}
+                planClientIdVariable: FORGE_PLAN_{{ upper .Environment }}_AZURE_CLIENT_ID
 ```
 
 The Azure composition creates a new `rg-<repo>-<environment>` resource group
@@ -418,10 +406,13 @@ and separate deploy and plan identities in it. It also creates their
 workflow-specific GitHub OIDC credentials and a private state container named
 `forge-<repo-id>-<environment>`. The deploy identity gets
 `Storage Blob Data Contributor` and the plan identity gets
-`Storage Blob Data Reader` on that container only. The connection Secret
-holds the generated client IDs; the deploy `EnvironmentSecret` and plan
-`ActionsSecret` publish them as `AZURE_CLIENT_ID` and
-`FORGE_PLAN_<ENV>_AZURE_CLIENT_ID`, respectively. The target also publishes
+`Storage Blob Data Reader` on that container only. The composition publishes the
+generated client IDs as GitHub **variables**: `AZURE_CLIENT_ID` in the
+repo's environment and `FORGE_PLAN_<ENV>_AZURE_CLIENT_ID` at the repo level.
+Client IDs are not secrets, and a variable can change value once the identity
+exists; a Crossplane-managed GitHub Actions secret cannot, so do not publish
+client IDs as secrets. The shared workflow reads the variables first and
+falls back to secrets of the same names. The target also publishes
 the resource group and container names as `AZURE_RESOURCE_GROUP`,
 `FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP`, `TF_STATE_CONTAINER` and
 `FORGE_PLAN_<ENV>_TF_STATE_CONTAINER`.

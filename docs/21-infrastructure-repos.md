@@ -10,9 +10,10 @@ template and sets up everything around it: the GitHub environments, the
 account's secrets, and the cloud's trust in the repo's workflow. Production
 runs wait for an approval in Forge by the team that owns the repo.
 
-Forge never deploys such a repo itself, and it has no previews.
-PR plans and what-if checks inspect existing accounts; they do not create
-preview environments.
+Forge never deploys such a repo itself, and it has no previews. For Azure,
+Forge provisions a separate resource group for each service and environment
+when it sets up the repo. PR plans and what-if checks inspect that group;
+they do not create preview environments or infrastructure resources.
 
 Your platform team decides which **targets** exist. A target is a set of cloud
 accounts, one per environment: for example an Azure subscription for staging
@@ -39,8 +40,13 @@ Forge then:
 3. Sets up a GitHub environment for each environment you chose, with the
    account's values as environment secrets and variables. Production only
    accepts runs from `main`.
-4. Lets the shared workflow sign in to each account.
-5. With repository protection enabled, requires a pull request for `main`
+4. For Azure, asks Crossplane to create a new `rg-<repo>-<environment>`, a
+   private Terraform state container, a deploy identity and a read-only plan
+   identity for that group, and each identity's GitHub OIDC trust. Forge
+   passes the generated client IDs to GitHub without exposing them in the
+   repo.
+5. Lets the shared workflow sign in to each service environment.
+6. With repository protection enabled, requires a pull request for `main`
    and successful infrastructure PR checks, without administrator bypass.
    The owning team must approve the pull request; see
    [the owner team's access](12-catalog.md#the-owner-teams-access-to-the-repo)
@@ -102,36 +108,23 @@ PR what-if uses ARM deployment what-if with read-only validation, not stack
 what-if. It does not show stack unmanage deletions, so review resources
 removed from the template as well as the what-if output.
 
-Bicep uses subscription scope by default. To limit deployments to pre-existing
-resource groups, set the repository variable `BICEP_DEPLOYMENT_SCOPE` to
-`resourceGroup` and set `targetScope = 'resourceGroup'` in `main.bicep`. This
-repository-wide setting applies to every environment. Set `AZURE_RESOURCE_GROUP`
-in each GitHub deployment environment, and set
-`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP` as a repository variable for each
-environment in `FORGE_PLAN_ENVIRONMENTS`. The plan and deployment identities
-can then be scoped to their respective resource groups. The template must not
-try to create its containing resource group. In this mode, the stack deletes
-unmanaged resources and uses `denyDelete`, but does not manage or delete the
-containing group. Leaving `BICEP_DEPLOYMENT_SCOPE` unset preserves the
-subscription-scoped behavior.
-
-When Forge configures the repo's environments through an infrastructure
-target, the scope can instead be set per environment: set
-`BICEP_DEPLOYMENT_SCOPE` in that environment's `githubVariables` and in its
-`plan.githubVariables`. Forge prefixes the plan setting as
-`FORGE_PLAN_<ENV>_BICEP_DEPLOYMENT_SCOPE`; it takes precedence over the
-repository-wide setting for that environment's PR what-if. The deployment
-environment setting takes precedence for its deployment.
+Bicep templates created from Forge's infrastructure targets deploy at
+resource-group scope. Forge provisions a separate group for each service and
+environment, sets `AZURE_RESOURCE_GROUP` in the deployment environment and
+`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP` for each plan environment, and scopes
+the deployment and plan identities to that service's group. The Bicep file
+must not create its containing group. The stack deletes unmanaged resources
+and uses `denyDelete`, but does not manage or delete the containing group.
 
 Terraform/OpenTofu PR plans read a state snapshot into a local backend without
 locking or initializing remote state. A missing blob means no prior deploy;
 other storage failures stop the plan. Deployment replans and acquires the
 state lock after merge, so a PR plan is not a saved apply authorization.
-Plans and deployments use the same state key for each environment. The
-platform can set the optional `TF_STATE_KEY_SUFFIX` environment variable in a
-target to isolate state blobs, without changing how existing targets are
-handled. Do not change a suffix for a state that already contains resources
-unless its state is migrated.
+Plans and deployments use the same state key for each environment. New Azure
+targets use a private state container for each repo and environment. Legacy
+targets without a container setting continue to use the shared `tfstate`
+container until their state is migrated; do not move a state to a new
+container without copying its blob and lock state safely.
 
 The person who pushed the commit, or who re-ran the job, cannot approve it:
 
@@ -178,10 +171,26 @@ Infrastructure repos are off until you set `infrastructure.*` in the chart
 
 - Crossplane, with its GitHub provider (a `ProviderConfig` or
   `ClusterProviderConfig` for your organization) and a provider for each cloud
-  your targets use. For Azure that is `provider-azure-managedidentity`, whose
-  identity may only edit the targets' identities.
+  your targets use. For Azure's per-service environments, install the
+  Resources, Managed Identity, Authorization and Storage providers and the
+  `AzureInfrastructureEnvironment` Composition.
+- A dedicated Azure provider identity for that Composition. It must create
+  service resource groups and private state containers, create the scoped
+  plan role definition, and assign only the platform-approved deploy, plan and
+  state roles. The deploy identity gets Contributor and Azure Deployment Stack
+  Owner on its service group, plus Storage Blob Data Contributor on its own
+  state container. The plan identity gets Reader and a custom role limited to
+  ARM deployment validation and what-if actions on its service group, plus
+  Storage Blob Data Reader on its own state container. The provider identity
+  therefore needs narrowly scoped permission to create role definitions and
+  role assignments. Its credentials and assignments are install-specific and
+  require approval before rollout. Resource groups and state containers are
+  orphaned on repo deletion; deleting the repo does not delete infrastructure
+  or state.
 - A Kubernetes Secret per target environment in `infrastructure.namespace`,
-  with the values the target's `githubSecrets` name.
+  with the tenant and subscription values the target's `githubSecrets` name.
+  The Azure deploy and plan client IDs come from the per-service Composition,
+  not this shared Secret.
 - A separate `plan` identity and Secret for each target environment. PRs run
   unreviewed code: never reuse a deployment identity. Its `githubSecrets`,
   `githubVariables` and `access` follow the same shape as deployment settings.
@@ -202,22 +211,21 @@ Infrastructure repos are off until you set `infrastructure.*` in the chart
   that require your team's review on `exceptions/`. Merge exception pull
   requests with squash.
 
-For Azure, each environment's managed identity holds at most 20 federated
-credentials, so a target environment takes about 20 repos (`maxRepos`). OpenTofu
-keeps its state in a storage account the identity can write blobs to (Storage
-Blob Data Contributor): Owner alone gives no data access.
+OpenTofu keeps each service and environment's state in its own private blob
+container. The deployment identity can write blobs there (Storage Blob Data
+Contributor); the plan identity can read blobs there (Storage Blob Data
+Reader). Neither identity can access another service's state container.
+Owner alone gives no blob data access.
 
-The Azure **plan** identity instead needs Reader on the resources it plans,
-ARM `Microsoft.Resources/deployments/whatIf/action` and
-`Microsoft.Resources/deployments/validate/action`, and Storage Blob Data Reader
-on the `tfstate` container. Bicep what-if uses `providerNoRbac` validation;
-Terraform/OpenTofu PR plans use `-lock=false`, so no state write or lease
-permission is granted. In resource-group-scoped Bicep repos, set the
-`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP` repository variable and scope the plan
-identity's resource permissions to that group. Do not assign Contributor or
-Owner to this identity.
-Its Azure federated credentials also have the 20-per-identity limit; keep
-the target's `maxRepos` within the capacities of both identities.
+The Azure **plan** identity also needs Reader on its service resource group
+and ARM `Microsoft.Resources/deployments/whatIf/action` and
+`Microsoft.Resources/deployments/validate/action`; the Composition supplies a
+custom role containing only the required deployment-read and what-if
+operations. Bicep what-if uses `providerNoRbac` validation; Terraform/OpenTofu
+PR plans use `-lock=false`, so no state write or lease permission is granted.
+Do not assign Contributor or Owner to this identity. Resource-group-scoped
+Bicep repos use the per-service `FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP`
+repository variable.
 
 Roll out the plan settings and shared workflow before making PR checks
 required. Existing repos whose workflows do not call the shared workflow

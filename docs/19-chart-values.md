@@ -324,121 +324,49 @@ all chosen accounts' plan/what-if jobs to succeed.
 
 ## Infrastructure Repos
 
-Repos of infrastructure code (Bicep, OpenTofu) that deploy themselves from
-GitHub Actions to a target, with production approved in Forge. Needs deploys,
-Crossplane with its GitHub provider and a provider per cloud, and the GitHub
-App's Actions: write. See [Infrastructure Repos](21-infrastructure-repos.md).
+Infrastructure repos are created from templates and deployed by their GitHub
+Actions workflows, with production approval in Forge. They are disabled by
+default. Enabling them requires deploys, Crossplane with its GitHub provider,
+provider integrations for the targets you offer, a shared workflow, and the
+GitHub App's Actions: write permission. See
+[Infrastructure Repos](21-infrastructure-repos.md) for the developer guide.
 
 | Value | Default | What |
 | --- | --- | --- |
 | `infrastructure.enabled` | `false` | Turn it on |
-| `infrastructure.namespace` | `forge-infrastructure` | Where the Crossplane objects and the targets' Secrets live |
+| `infrastructure.namespace` | `forge-infrastructure` | Where provider access objects and target Secrets live |
 | `infrastructure.providerConfig` | `{kind: ClusterProviderConfig, name: github}` | The Crossplane GitHub provider's config |
 | `infrastructure.workflow` | `""` | Required: the shared workflow, `<owner>/<repo>/.github/workflows/<file>.yml@refs/heads/<branch>` |
 | `infrastructure.repoWorkflow` | `deploy.yml` | The repos' workflow Forge starts once production is approved |
-| `infrastructure.accessKinds` | `[]` | The kinds the targets' `access` make, as `<group>/<Kind>` |
+| `infrastructure.accessKinds` | `[]` | The Crossplane resource kinds the targets' `access` templates create, as `<group>/<Kind>` |
 | `infrastructure.targets` | `[]` | The targets (below) |
 
-A target, with one entry per environment (`staging`, `production`):
+Each target has a name, optional team allowlist, and one entry for each
+environment it supports. Configure the environment's Secret and the mappings
+to GitHub secrets and variables. Its `access` template creates provider access
+objects for the repository and environment. The installed provider integration
+defines the deployment scope and whether it uses an existing scope or
+provisions one. That scope can be a resource group, subscription, account,
+project or another provider-specific boundary; Forge does not require resource
+groups.
 
-```yaml
-infrastructure:
-  enabled: true
-  workflow: my-org/forge-workflows/.github/workflows/infrastructure.yml@refs/heads/main
-  accessKinds:
-  - azure.forge.dev/AzureInfrastructureEnvironment
-  - actions.github.m.upbound.io/EnvironmentSecret
-  - actions.github.m.upbound.io/EnvironmentVariable
-  - actions.github.m.upbound.io/ActionsSecret
-  - actions.github.m.upbound.io/ActionsVariable
-  targets:
-    - name: azure
-      title: Azure
-      teams: []                        # empty: every team
-      environments:
-        production:
-          secret: target-azure-production    # a Secret in infrastructure.namespace
-          githubSecrets:                     # environment secret: key in that Secret
-            AZURE_TENANT_ID: tenantId
-            AZURE_SUBSCRIPTION_ID: subscriptionId
-          githubVariables:                   # environment variable: value
-            TF_STATE_RESOURCE_GROUP: rg-state
-            TF_STATE_STORAGE_ACCOUNT: stexamplestate
-            AZURE_LOCATION: swedencentral
-          maxRepos: 20
-          plan:                              # a different, read-only identity
-            secret: target-azure-production-plan
-            githubSecrets:
-              AZURE_TENANT_ID: tenantId
-              AZURE_SUBSCRIPTION_ID: subscriptionId
-            githubVariables:
-              TF_STATE_RESOURCE_GROUP: rg-state
-              TF_STATE_STORAGE_ACCOUNT: stexamplestate
-              AZURE_LOCATION: swedencentral
-          access: |                          # Crossplane objects for one repo
-            apiVersion: azure.forge.dev/v1alpha1
-            kind: AzureInfrastructureEnvironment
-            metadata:
-              name: {{ .Repo }}-{{ .Environment }}
-            spec:
-              crossplane:
-                compositionRef:
-                  name: azure-infrastructure-environment
-              writeConnectionSecretToRef:
-                name: {{ .Repo }}-{{ .Environment }}-azure-ids
-              parameters:
-                location: swedencentral
-                resourceGroupName: rg-{{ .Repo }}-{{ .Environment }}
-                deployIdentityName: id-{{ .Repo }}-{{ .Environment }}-deploy
-                planIdentityName: id-{{ .Repo }}-{{ .Environment }}-plan
-                planRoleName: forge-plan-{{ .RepoID }}-{{ .Environment }}
-                deploySubject: {{ .Subject }}
-                planSubject: {{ .PlanSubject }}
-                stateContainerName: forge-{{ .RepoID }}-{{ .Environment }}
-                stateStorageAccountId: /subscriptions/<id>/resourceGroups/rg-state/providers/Microsoft.Storage/storageAccounts/stexamplestate
-                githubRepository: {{ .Repo }}
-                githubEnvironment: {{ .Environment }}
-                planClientIdVariable: FORGE_PLAN_{{ upper .Environment }}_AZURE_CLIENT_ID
-```
-
-The Azure composition creates a new `rg-<repo>-<environment>` resource group
-and separate deploy and plan identities in it. It also creates their
-workflow-specific GitHub OIDC credentials and a private state container named
-`forge-<repo-id>-<environment>`. The deploy identity gets
-`Storage Blob Data Contributor` and the plan identity gets
-`Storage Blob Data Reader` on that container only. The composition publishes the
-generated client IDs as GitHub **variables**: `AZURE_CLIENT_ID` in the
-repo's environment and `FORGE_PLAN_<ENV>_AZURE_CLIENT_ID` at the repo level.
-Client IDs are not secrets, and a variable can change value once the identity
-exists; a Crossplane-managed GitHub Actions secret cannot, so do not publish
-client IDs as secrets. The shared workflow reads the variables first and
-falls back to secrets of the same names. The target also publishes
-the resource group and container names as `AZURE_RESOURCE_GROUP`,
-`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP`, `TF_STATE_CONTAINER` and
-`FORGE_PLAN_<ENV>_TF_STATE_CONTAINER`.
+Use the optional `plan` block to configure distinct, read-only access for
+pull-request plans. It has its own Secret, GitHub secret and variable mappings,
+and `access` template. Do not reuse deployment credentials for plans. Plan
+settings are written as repository-level `FORGE_PLAN_<ENV>_*` values and do
+not create GitHub environments.
 
 `access` is a Go template with `.Org`, `.Repo`, `.Team`, `.Environment`,
-`.RepoID`, `.Subject` and `.PlanSubject` (the last two are OIDC subjects for
-deployment and pull-request runs through the shared workflow). `.RepoID` is
-GitHub's stable numeric ID for the repository. Each kind it makes must be in
-`accessKinds`. If an Argo CD ApplicationSet renders your values, write the
-`{{ }}` so that it passes them through.
+`.RepoID`, `.Subject` and `.PlanSubject`. Use it to create the Crossplane
+resources your provider integration needs for deployment or planning; every
+resource kind must be listed in `accessKinds`. `.Subject` and `.PlanSubject`
+identify the shared workflow's deployment and pull-request runs. If another
+templating system renders the chart values, ensure it passes these template
+expressions through unchanged.
 
-Each environment's `plan` uses a different Kubernetes Secret and identity
-from deployment. It has `secret`, `githubSecrets`, `githubVariables` and
-`access`; its `.Subject` ends in `:pull_request`, not `:environment:production`.
-Crossplane writes repository settings named `FORGE_PLAN_<ENV>_<NAME>` and
-the JSON array `FORGE_PLAN_ENVIRONMENTS`. Plans use no GitHub environment;
-production-only repositories need no staging account. See
-[Infrastructure Repos](21-infrastructure-repos.md#for-the-platform-team)
-for the read-only Azure roles.
-
-For Azure service resource groups, set `BICEP_DEPLOYMENT_SCOPE: resourceGroup`
-in both the environment's `githubVariables` and its `plan.githubVariables`.
-The plan setting becomes `FORGE_PLAN_<ENV>_BICEP_DEPLOYMENT_SCOPE` and
-overrides the repository-wide setting for that environment's PR what-if. The
-Azure composition supplies the per-service resource group names to the
-deployment and plan workflows.
+The shared workflow and infrastructure templates must support the providers
+and tools in your targets. Configure provider-specific state storage,
+permissions, plan behavior and deletion policies in that integration.
 
 ## Service Secrets
 

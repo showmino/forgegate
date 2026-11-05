@@ -4,26 +4,33 @@ sidebar_position: 15
 
 # Infrastructure Repos
 
-An infrastructure repo holds infrastructure code, Bicep or OpenTofu, that its
-own GitHub Actions deploy to a cloud account. Forge makes the repo from a
-template and sets up everything around it: the GitHub environments, the
-account's secrets, and the cloud's trust in the repo's workflow. Production
-runs wait for an approval in Forge by the team that owns the repo.
+An infrastructure repo holds infrastructure code, such as Bicep, OpenTofu or
+Terraform, that its GitHub Actions deploy to a configured cloud target. Forge
+creates the repo and coordinates its GitHub environments, workflow access and
+production approval. The target integration and shared workflow determine how
+cloud access and deployment are set up.
+The platform must provide templates and a shared workflow for the providers
+and tools it offers.
 
-Forge never deploys such a repo itself, and it has no previews. For Azure,
-Forge provisions a separate resource group for each service and environment
-when it sets up the repo. PR plans and what-if checks inspect that group;
-they do not create preview environments or infrastructure resources.
+Forge does not deploy infrastructure itself or create preview environments.
+Pull-request plans and what-if checks inspect the configured targets; they do
+not apply changes.
 
-Your platform team decides which **targets** exist. A target is a set of cloud
-accounts, one per environment: for example an Azure subscription for staging
-and another for production. Ask them which targets your team may use.
+Your platform team defines which **targets** exist and which teams may use
+them. A target can use whatever scope fits its provider and deployment model:
+for example, a resource group, subscription, cloud account or project. The
+provider integration can use an existing scope or provision one for a service
+environment. Forge does not require resource groups.
 
 ## Create One
 
 ```sh
-forge create infra-network --template opentofu --target azure --team platform
+forge template targets
+forge create infra-network --template opentofu --target my-cloud --team platform
 ```
+
+Replace `my-cloud` and `platform` with a target and team available in your
+Forge installation.
 
 - `--template` is an infrastructure template, such as `opentofu` or `bicep`
   (`forge template list` shows the type of each).
@@ -37,14 +44,12 @@ Forge then:
 1. Creates the repo from the template and gives your team access.
 2. Makes the repo's workflow tokens name the shared deploy workflow, so the
    cloud trusts only that workflow.
-3. Sets up a GitHub environment for each environment you chose, with the
-   account's values as environment secrets and variables. Production only
+3. Sets up a GitHub environment for each environment you chose, with that
+   environment's configured values as secrets and variables. Production only
    accepts runs from `main`.
-4. For Azure, asks Crossplane to create a new `rg-<repo>-<environment>`, a
-   private Terraform state container, a deploy identity and a read-only plan
-   identity for that group, and each identity's GitHub OIDC trust. Forge
-   passes the generated client IDs to GitHub without exposing them in the
-   repo.
+4. Configures the provider access for each chosen environment. Depending on
+   the platform integration, this may provision a new scope or grant access
+   to an existing one. Forge does not prescribe the cloud resource boundary.
 5. Lets the shared workflow sign in to each service environment.
 6. With repository protection enabled, requires a pull request for `main`
    and successful infrastructure PR checks, without administrator bypass.
@@ -75,8 +80,8 @@ environments: those are kept by Forge.
 
 ## Deploy to Production
 
-1. Open a pull request. The workflow checks the code and runs Terraform/OpenTofu
-   plan or Bicep what-if against every account the repo uses. Production-only
+1. Open a pull request. The workflow checks the code and runs a Terraform/OpenTofu
+   plan or Bicep what-if against every configured target environment. Production-only
    repos work too. Each PR uses a separate plan identity, not the deployment
    identity, and creates no environments or resources. All checks must succeed
    before merging; keep the branch up to date with `main`.
@@ -98,33 +103,13 @@ environments: those are kept by Forge.
 
    Forge then starts the repo's production run, which deploys that commit.
 
-Bicep uses `Azure/bicep-deploy@v2.5.0` for what-if and deployment. Deployments
-use Azure deployment stacks with `delete` for unmanaged resources and
-resource groups and `denyDelete` for managed resources. **Removing a resource
-from your template can delete it during the next approved deployment.**
-The deny setting prevents ordinary direct deletion of managed resources; it
-does not prevent the stack from removing resources as configured.
-PR what-if uses ARM deployment what-if with read-only validation, not stack
-what-if. It does not show stack unmanage deletions, so review resources
-removed from the template as well as the what-if output.
-
-Bicep templates created from Forge's infrastructure targets deploy at
-resource-group scope. Forge provisions a separate group for each service and
-environment, sets `AZURE_RESOURCE_GROUP` in the deployment environment and
-`FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP` for each plan environment, and scopes
-the deployment and plan identities to that service's group. The Bicep file
-must not create its containing group. The stack deletes unmanaged resources
-and uses `denyDelete`, but does not manage or delete the containing group.
-
-Terraform/OpenTofu PR plans read a state snapshot into a local backend without
-locking or initializing remote state. A missing blob means no prior deploy;
-other storage failures stop the plan. Deployment replans and acquires the
-state lock after merge, so a PR plan is not a saved apply authorization.
-Plans and deployments use the same state key for each environment. New Azure
-targets use a private state container for each repo and environment. Legacy
-targets without a container setting continue to use the shared `tfstate`
-container until their state is migrated; do not move a state to a new
-container without copying its blob and lock state safely.
+The shared workflow and template define provider-specific validation,
+planning, state storage and deployment behavior. Configure pull-request
+credentials with read-only access, separate from deployment credentials. The
+merge-time deployment should plan again with its deployment access; a
+pull-request plan is not authorization to apply a saved plan. Review the
+provider's deletion and lifecycle behavior along with the plan output and
+template diff before merging.
 
 The person who pushed the commit, or who re-ran the job, cannot approve it:
 
@@ -166,76 +151,24 @@ forge approval exception revoke infra-network --reason 'Bo joined the team'
 
 ## For the Platform Team
 
-Infrastructure repos are off until you set `infrastructure.*` in the chart
-(see [Chart Values](19-chart-values.md#infrastructure-repos)). You also need:
+Infrastructure repos are disabled by default. To enable them, configure
+`infrastructure.enabled`, at least one target, and the shared workflow in the
+chart; see [Chart Values](19-chart-values.md#infrastructure-repos).
 
-- Crossplane, with its GitHub provider (a `ProviderConfig` or
-  `ClusterProviderConfig` for your organization) and a provider for each cloud
-  your targets use. For Azure's per-service environments, install the
-  Resources, Managed Identity, Authorization and Storage providers and the
-  `AzureInfrastructureEnvironment` Composition.
-- A dedicated Azure provider identity for that Composition. It must create
-  service resource groups and private state containers, create the scoped
-  plan role definition, and assign only the platform-approved deploy, plan and
-  state roles. The deploy identity gets Contributor and Azure Deployment Stack
-  Owner on its service group, plus Storage Blob Data Contributor on its own
-  state container. The plan identity gets Reader and a custom role limited to
-  ARM deployment validation and what-if actions on its service group, plus
-  Storage Blob Data Reader on its own state container. The provider identity
-  therefore needs narrowly scoped permission to create role definitions and
-  role assignments. Its credentials and assignments are install-specific and
-  require approval before rollout. Resource groups and state containers are
-  orphaned on repo deletion; deleting the repo does not delete infrastructure
-  or state.
-- A Kubernetes Secret per target environment in `infrastructure.namespace`,
-  with the tenant and subscription values the target's `githubSecrets` name.
-  The Azure deploy and plan client IDs come from the per-service Composition,
-  not this shared Secret.
-- A separate `plan` identity and Secret for each target environment. PRs run
-  unreviewed code: never reuse a deployment identity. Its `githubSecrets`,
-  `githubVariables` and `access` follow the same shape as deployment settings.
-  Crossplane creates repository-level `FORGE_PLAN_<ENV>_*` settings, not a
-  GitHub environment. Its federated subject is the shared workflow's PR
-  subject, ending in `:pull_request`.
-- The shared workflow, in a repository your organization's repos may call
-  workflows from (`infrastructure.workflow`).
-- Runners for that workflow with the tools it calls: the Azure CLI with
-  Bicep, OpenTofu or Terraform, and `unzip`. Put them in the runner image
-  with pinned versions. For an actions-runner-controller scale set, build the
-  image `FROM ghcr.io/actions/actions-runner` so its Docker-in-Docker mode
-  still finds `/home/runner/externals`, and point every job's `runs-on` at
-  that scale set.
-- The GitHub App's **Actions: write**, for the repo's OIDC setting and to start
-  production runs.
-- `repositories.enabled: true`, Crossplane's namespaced GitHub
-  `RepositoryRuleset` CRD, and a GitHub provider with repository
-  administration access. Main requires PRs, without App or administrator
-  bypass. Existing audited Forge-created repos are included; connected repos
-  are not adopted. Removing a catalog entry does not remove protection.
-- For exceptions: admin groups that are GitHub teams (`--admin-groups
-  my-org:platform`), and in the deploy repo a `CODEOWNERS` entry and a ruleset
-  that require your team's review on `exceptions/`. Merge exception pull
-  requests with squash.
+For each target, configure the environments, teams, GitHub settings and
+provider access. The access integration determines the deployment boundary:
+it can use an existing scope or provision a scope such as a resource group,
+subscription, account or project. Configure the shared workflow and templates
+to sign in to that provider and deploy with the selected tool. Forge does not
+require a particular cloud provider or resource hierarchy.
 
-OpenTofu keeps each service and environment's state in its own private blob
-container. The deployment identity can write blobs there (Storage Blob Data
-Contributor); the plan identity can read blobs there (Storage Blob Data
-Reader). Neither identity can access another service's state container.
-Owner alone gives no blob data access.
+Configure a separate, least-privilege plan identity for pull-request code;
+never reuse deployment credentials. Enable repository protection and require
+the infrastructure PR check before merges. Ensure the shared workflow reports
+that check and that branch protection and the workflow are ready before making
+it required.
 
-The Azure **plan** identity also needs Reader on its service resource group
-and ARM `Microsoft.Resources/deployments/whatIf/action` and
-`Microsoft.Resources/deployments/validate/action`; the Composition supplies a
-custom role containing only the required deployment-read and what-if
-operations. Bicep what-if uses `providerNoRbac` validation; Terraform/OpenTofu
-PR plans use `-lock=false`, so no state write or lease permission is granted.
-Do not assign Contributor or Owner to this identity. Resource-group-scoped
-Bicep repos use the per-service `FORGE_PLAN_<ENV>_AZURE_RESOURCE_GROUP`
-repository variable.
-
-Roll out the plan settings and shared workflow before making PR checks
-required. Existing repos whose workflows do not call the shared workflow
-need a workflow PR first. Targets without plan access refuse new creates.
-Existing repositories without a successful template-create audit record
-cannot be safely distinguished from connected repos: inventory and adopt
-their rulesets explicitly rather than assuming ownership.
+The GitHub App needs **Actions: write** for the repository's OIDC settings and
+to start production runs. To support team-of-one exceptions, configure Forge's
+admin groups and require the platform team's review for exception changes in
+the deploy repo.

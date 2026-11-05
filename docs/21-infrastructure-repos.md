@@ -165,6 +165,16 @@ subscription, account or project. Configure the shared workflow and templates
 to sign in to that provider and deploy with the selected tool. Forge does not
 require a particular cloud provider or resource hierarchy.
 
+Keep the deployment and plan identities outside the scope they deploy to, and
+give them roles on that scope only. A role that can write in the scope must
+not be able to change the identity's own trust. On Azure, for example,
+Contributor on a resource group can add federated credentials to the
+identities in it, so code deployed with that identity could sign in without
+Forge's approval. Put the identities in a separate resource group where they
+have no role, and have the templates reference the service's resource group
+as an existing one (`data "azurerm_resource_group"` in OpenTofu, an
+`existing` resource group in Bicep) rather than declare it.
+
 Configure a separate, least-privilege plan identity for pull-request code;
 never reuse deployment credentials. Enable repository protection and require
 the infrastructure PR check before merges. Ensure the shared workflow reports

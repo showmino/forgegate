@@ -71,6 +71,9 @@ When repository protection is enabled, the owner team is also the only
 `main`. An approved alternate reviewer team can replace it; the alternate
 must already have Maintain access. Revoking that exception requires the
 alternate team to approve the PR that restores the owning team in `CODEOWNERS`.
+An active team-of-one production exception for an infrastructure repo waives
+approving reviews for that repo's pull requests; the pull-request requirement
+and required checks remain. See [A Team of One](21-infrastructure-repos.md#a-team-of-one).
 
 Only repos in your organization are changed. To check who has
 access, open the repo's **Settings → Collaborators and teams**, or run:

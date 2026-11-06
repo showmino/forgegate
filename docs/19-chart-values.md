@@ -338,6 +338,7 @@ GitHub App's Actions: write permission. See
 | `infrastructure.providerConfig` | `{kind: ClusterProviderConfig, name: github}` | The Crossplane GitHub provider's config |
 | `infrastructure.workflow` | `""` | Required: the shared workflow, `<owner>/<repo>/.github/workflows/<file>.yml@refs/heads/<branch>` |
 | `infrastructure.repoWorkflow` | `deploy.yml` | The repos' workflow Forge starts once production is approved |
+| `infrastructure.allowSelfApproval` | `false` | `true` lets any member of the owning team approve a production run, including whoever pushed the commit or started the run; `false` requires another member (or a [team-of-one exception](21-infrastructure-repos.md#a-team-of-one)) |
 | `infrastructure.accessKinds` | `[]` | The Crossplane resource kinds the targets' `access` templates create, as `<group>/<Kind>` |
 | `infrastructure.targets` | `[]` | The targets (below) |
 

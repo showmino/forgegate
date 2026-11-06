@@ -385,8 +385,8 @@ infrastructure:
               planSubject: {{ .PlanSubject }}
 ```
 
-With `objects: template`, Forge refuses `githubSecrets`, `githubVariables` and
-`plan` on the target, and `secret` is optional. Your template is then
+With `objects: template`, Forge refuses `secret`, `githubSecrets`,
+`githubVariables` and `plan` on the target: they would be ignored. Your template is then
 responsible for two things Forge otherwise does itself: allowing only `main` to
 deploy to the production environment, and giving pull-request plans a separate,
 read-only identity. Roll out a Forge version that knows `objects` before you set

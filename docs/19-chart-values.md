@@ -356,6 +356,42 @@ and `access` template. Do not reuse deployment credentials for plans. Plan
 settings are written as repository-level `FORGE_PLAN_<ENV>_*` values and do
 not create GitHub environments.
 
+Set `objects: template` on a target to let each environment's `access` template
+make every object of that environment. Forge then writes only what the template
+makes, plus the repository variables `FORGE_ENVIRONMENTS` and
+`FORGE_PLAN_ENVIRONMENTS`. Use it with a composition tool such as a
+[kro](https://kro.run/) ResourceGraphDefinition, so that one small instance per
+environment makes the GitHub environment, its secrets and variables, the plan
+settings and the cloud access:
+
+```yaml
+infrastructure:
+  accessKinds: [kro.run/CloudEnvironment]
+  targets:
+    - name: cloud
+      objects: template
+      environments:
+        production:
+          access: |
+            apiVersion: kro.run/v1alpha1
+            kind: CloudEnvironment
+            metadata:
+              name: {{ .Repo }}-{{ .Environment }}
+            spec:
+              repo: {{ .Repo }}
+              repoID: "{{ .RepoID }}"
+              environment: {{ .Environment }}
+              deploySubject: {{ .Subject }}
+              planSubject: {{ .PlanSubject }}
+```
+
+With `objects: template`, Forge refuses `githubSecrets`, `githubVariables` and
+`plan` on the target, and `secret` is optional. Your template is then
+responsible for two things Forge otherwise does itself: allowing only `main` to
+deploy to the production environment, and giving pull-request plans a separate,
+read-only identity. Roll out a Forge version that knows `objects` before you set
+it: an older one refuses the setting.
+
 `access` is a Go template with `.Org`, `.Repo`, `.Team`, `.Environment`,
 `.RepoID`, `.Subject` and `.PlanSubject`. Use it to create the Crossplane
 resources your provider integration needs for deployment or planning; every

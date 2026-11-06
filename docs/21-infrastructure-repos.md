@@ -117,6 +117,10 @@ The person who pushed the commit, or who re-ran the job, cannot approve it:
 you started this run, so another member of team platform must approve it
 ```
 
+If your Forge is set up with `infrastructure.allowSelfApproval: true`, this
+rule is off: any member of the owning team may approve, including the person
+who pushed or re-ran. Ask your platform team which applies.
+
 `forge approval reject <id> --reason ...` turns it down.
 
 Only the newest commit can deploy. A newer push supersedes an approval that is
@@ -129,8 +133,9 @@ the approval. Run the same command again to retry.
 
 ## A Team of One
 
-A team with one member cannot get a second approver. Ask the platform team for
-an exception:
+A team with one member cannot get a second approver. (Not needed when your
+Forge has `infrastructure.allowSelfApproval` on; see above.) Ask the platform
+team for an exception:
 
 ```sh
 forge approval exception request infra-network --reason 'I am the only one on the team'

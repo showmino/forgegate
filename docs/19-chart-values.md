@@ -132,6 +132,8 @@ deploys:
 
 The App needs the organization permission Members (read), or the login sees
 no teams and nobody is an admin.
+It also needs the account permission Email addresses (read), or anyone whose
+GitHub email is private cannot sign in.
 
 ## Address
 
@@ -505,6 +507,8 @@ github:
   #   client-secret    a client secret of the GitHub App
   # The App needs the organization permission Members: read, or the login
   # sees no teams and nobody is an admin.
+  # And the account permission Email addresses: read, or anyone whose GitHub
+  # email is private cannot sign in.
   existingSecret: forge-github
   # The key names in that Secret, if yours are named otherwise (for example
   # by a secrets operator that keeps a vault's field names).

@@ -45,6 +45,9 @@ GitHub App**.
     for `forge create`), Workflows (read and write), Metadata (read).
   - Organization: **Members (read)**. Without it the login sees no teams and
     nobody is an admin.
+  - Account: **Email addresses (read)**. The login reads the email of
+    someone whose GitHub email is private from GitHub's email list; without
+    the permission their sign-in fails.
 - **Where can it be installed:** only this account.
 
 Then on the App's page:
@@ -428,6 +431,8 @@ true`. It needs metrics-server.
 | `forge-api` is not ready, its log says "waiting for OIDC issuer" | The API reaches the login through the public address: it must resolve inside the cluster and its certificate must be trusted |
 | GitHub says "The redirect_uri is not associated with this application" | The App's callback URL is not exactly `https://<host>/dex/callback` |
 | You sign in but nothing is allowed | The App lacks the organization permission Members (read), or you are not in `github.adminTeams` |
+| Sign-in fails with "github: get user: 403 Forbidden ... Resource not accessible by integration" | The App lacks the account permission Email addresses (read), and your GitHub email is private |
+| Sign-in fails with "bad_verification_code" | The sign-in's code was used twice (a reload or a retry): start the sign-in again |
 | The Application `forge` shows `ComparisonError` and cannot fetch the chart | Argo CD is older than 3.1 (it has no `oci://` sources), or it cannot reach `ghcr.io` |
 | Pods wait with `CreateContainerConfigError` | A Secret from step 4 is missing or a key is named differently: `forge-github` (`app-private-key`, `client-id`, `client-secret`) or `forge-database` (`password`, `uri`) |
 | `forge-api` or `dex` cannot log in to the database | The password in `forge-database` is not the database user's, or `uri` has it without URL-escaping |

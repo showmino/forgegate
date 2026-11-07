@@ -149,10 +149,32 @@ Forge is one address: the dashboard at `/`, the API at `/forge.v1.*` and
 | `gateway.enabled` | `false` | Expose Forge through HTTPRoutes on a Gateway of yours instead (set `ingress.enabled: false`). TLS is the Gateway listener's |
 | `gateway.parentRefs` | `[]` | The Gateway to attach to, for example `[{name: my-gateway, namespace: gateway-system}]`. Required with `gateway.enabled`, unless `gateway.appsGateway` |
 | `gateway.appsGateway` | `false` | `true` attaches the routes to the chart's own Gateway `forge-previews` (previews, or deploys with `apps.routing: gateway`), which then gets a listener for each of Forge's hosts. Send the host to that Gateway, as your services' addresses |
+| `gateway.apiTimeout` | `"0s"` | The request timeout on the API's HTTPRoute (`timeouts.request`). `"0s"` turns it off. Empty leaves the field out, for a Gateway implementation that rejects it, such as GKE's |
 
 The API streams operation logs: raise your controller's read timeout (for
 ingress-nginx, the annotation `nginx.ingress.kubernetes.io/proxy-read-timeout:
-"3600"`). The dashboard's server and the API reach the login and the API
+"3600"`). On GKE's Gateway controller, which refuses HTTPRoute timeouts
+(`GWCER104 ... timeouts are not supported`), set `gateway.apiTimeout: ""` and
+give the API a long backend timeout with a `GCPBackendPolicy`:
+
+```yaml
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: forge-api
+  namespace: forge
+spec:
+  default:
+    timeoutSec: 3600
+  targetRef: {group: "", kind: Service, name: forge-api}
+```
+
+GKE's load balancer also checks each backend on `GET /` unless told
+otherwise: add a `HealthCheckPolicy` per Service, with the path
+`/healthz` for `forge-api`, `/dex/healthz` for `dex` and `/api/healthz` for
+`forge-web`.
+
+The dashboard's server and the API reach the login and the API
 through this public address too, so it must resolve inside the cluster and its
 certificate must be trusted there.
 
@@ -531,6 +553,13 @@ gateway:
   # (apps.routing gateway, with previews or deploys on), which then gets a
   # listener of its own for each of Forge's hosts; parentRefs is not needed.
   appsGateway: false
+  # The request timeout of the API's route (HTTPRoute timeouts.request).
+  # "0s" turns it off, so the streamed operation logs are not cut. Empty
+  # leaves the field out, for an implementation that rejects it (GKE's
+  # Gateway controller); then set the API's timeout with that
+  # implementation's own policy (GKE: a GCPBackendPolicy on the Service
+  # forge-api with timeoutSec).
+  apiTimeout: "0s"
 
 api:
   image:

@@ -157,6 +157,12 @@ forge approval exception revoke infra-network --reason 'Bo joined the team'
 
 `list` shows each exception and whether it holds; if it does not, it says why.
 
+In the dashboard, open the repo's page: its Infrastructure section shows the
+exception, and members of the owning team (and admins) see **Ask for an
+exception**, or **Revoke exception** when the repo has one. The dialog asks for
+the reason and links the pull request Forge opens. The Approvals page lists
+every exception, with **Revoke** for the teams that may revoke it.
+
 ## For the Platform Team
 
 Infrastructure repos are disabled by default. To enable them, configure

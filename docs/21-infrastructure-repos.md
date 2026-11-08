@@ -93,7 +93,11 @@ environments: those are kept by Forge.
    ```
 
 3. Someone else on your team approves it, on the dashboard's **Approvals**
-   page or with the CLI:
+   page or with the CLI. Your team sees it waiting without looking for it: the
+   dashboard's Overview lists it under **Needs attention** ("Production of
+   infra-network waits for your team's approval"), and the sidebar shows how
+   many runs wait beside **Approvals**. A run you started yourself is listed
+   too, though someone else has to approve it.
 
    ```sh
    forge approval list --state pending

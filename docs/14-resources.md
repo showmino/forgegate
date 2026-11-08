@@ -78,6 +78,22 @@ forge resource list payments --env production -o json
 forge resource get payments/staging/main
 ```
 
+## In the Dashboard
+
+A service's page has a **Resources** tab once it has a database or a plan.
+It lists each database per environment with its settings, its state, the
+health the cluster reports and the Secret with its connection string, and
+the service's newest plans with their changes and policy result.
+
+A plan that is ready (allowed by policy and not expired) has **Apply**, for
+people on the owning team in staging and for admins in production. The
+dialog shows every change and warning before anything runs. A plan that
+deletes or replaces a database asks you to type its name first. The run then
+appears under **In progress**.
+
+Plans are made with `forge resource plan` or by the service's CI, not in the
+dashboard: a plan needs the `resources` list from your `forge.yaml`.
+
 ## The Policy
 
 | Rule | Result |

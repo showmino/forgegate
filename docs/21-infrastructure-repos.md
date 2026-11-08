@@ -97,7 +97,8 @@ environments: those are kept by Forge.
    dashboard's Overview lists it under **Needs attention** ("Production of
    infra-network waits for your team's approval"), and the sidebar shows how
    many runs wait beside **Approvals**. A run you started yourself is listed
-   too, though someone else has to approve it.
+   too, though someone else has to approve it unless your team has an
+   exception or your Forge allows self-approval (see below).
 
    ```sh
    forge approval list --state pending

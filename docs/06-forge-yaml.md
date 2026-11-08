@@ -144,9 +144,13 @@ infrastructure:
   tool: opentofu     # or terraform, bicep
 ```
 
-Such a repo has no `run`, `chart` or `resources`, and Forge refuses to deploy
-or preview it. Its target and environments are not here: Forge keeps them, so
-editing this file cannot move the repo to another cloud account.
+Such a repo has no `chart` or `resources`. Forge deploys and previews only
+an app next to the code: a repo made from a template whose `forge.yaml` also
+has `run` (see
+[A Web App with Its Infrastructure](21-infrastructure-repos.md#a-web-app-with-its-infrastructure)).
+Without one, Forge refuses to deploy or preview the repo. Its target and
+environments are not here: Forge keeps them, so editing this file cannot
+move the repo to another cloud account.
 
 ## resources
 

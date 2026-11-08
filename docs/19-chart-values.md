@@ -250,6 +250,7 @@ Both are off by default. Both need `apps.domain` and `apps.pullSecret`.
 | `apps.routing` | `gateway` | `gateway`: the chart makes the Gateway `forge-previews` (needs a Gateway API implementation). `ingress`: each deploy gets an Ingress, so an ingress controller is enough; previews need `gateway` |
 | `apps.gateway.className` | `istio` | The name of an existing GatewayClass (`envoy`, `istio`, ...) |
 | `apps.gateway.annotations` | `{}` | Annotations for the Service your Gateway implementation makes, for example a cloud's fixed public IP |
+| `apps.gateway.addresses` | `[]` | The Gateway's `spec.addresses`, for an implementation that takes its address there. On GKE, a reserved global IP: `[{type: NamedAddress, value: <address name>}]` |
 | `apps.ingress.className` | `""` | The IngressClass of each deploy's Ingress |
 | `apps.ingress.annotations` | `{}` | Annotations on each deploy's Ingress, for example cert-manager's. They must not contain `{{` |
 | `apps.ingress.tls` | `false` | `true` asks for a certificate per service in the Secret `<service>-tls` (with cert-manager's annotation). Forge still shows the address as `http://` |
@@ -682,6 +683,10 @@ apps:
     # Annotations for the Service your Gateway implementation creates, for
     # example a cloud's fixed public IP.
     annotations: {}
+    # The Gateway's spec.addresses, for an implementation that takes its
+    # address there, for example GKE's reserved IP:
+    # [{type: NamedAddress, value: <the address's name>}].
+    addresses: []
   ingress:
     className: ""
     annotations: {}

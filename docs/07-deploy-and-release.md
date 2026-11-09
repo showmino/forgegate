@@ -251,26 +251,29 @@ forge deploy promote podinfo
 
 ## In the Dashboard
 
-The **Overview** (the dashboard's home page, `https://forge.example.com/`)
-opens with a status board: what `forge deploy status` shows, for every
-service at once.
+The dashboard's **Home** page (`https://forge.example.com/`) starts with the
+actions your role allows, such as **Create a service** and **Deploy a
+change**, and four numbers:
 
-- A row for production, then one for staging, with one line of tiles. A
-  service that is degraded, not running or out of sync comes first and is
-  the only tile in colour; then the services deployed most recently. A
-  healthy tile shows the version (or commit) that runs and when it was
-  deployed. When a row has more services than fit, its last tile says how
-  many more there are and opens the **Services** page, which lists every
-  service with its status in both environments.
-- Next to each row, how many services are unhealthy or out of sync, how many
-  run there, and how many in the catalog are not deployed there yet.
-- Under the rows: the deploys started today and how many of the finished
-  ones failed, the previews that are live and how many end within six hours,
-  and how many clusters need a look. Each links to its page.
+- the services in the catalog (your team's, if you are in a team);
+- the deploys started today, and how many of the finished ones succeeded;
+- what needs you: production runs waiting for your team's approval,
+  services that are degraded, not running or out of sync, deploys that
+  failed, and previews that end within six hours;
+- how production is doing.
 
-Click a tile to open that service. Below the board, the Overview follows the
-deploys in flight and lists what needs attention and the deploys that ended
-in the last 24 hours.
+Under them, **Services that need a look first** (or **Your services**, for a
+team member) shows each service in the environment where it hurts most,
+broken first. Next to it, **Needs you** lists the problems with a button to
+open or extend each; when nothing needs you, **Get started** shows the way
+from your first service to production. At the bottom are the deploys that
+ended in the last 24 hours, the status of production, staging, previews,
+deploys and clusters, and quick links.
+
+The **Deployments** page shows today in four numbers (deploys, success rate,
+median duration, failures) and every deploy, promotion and rollback of the
+last 7 days. Search, or pick a service, an environment or a status; click a
+row to see its details, its operation and its Argo CD application.
 
 A service's page in the dashboard shows both environments, with
 Promote and Roll back buttons behind a confirmation. For a service that runs

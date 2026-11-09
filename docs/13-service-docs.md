@@ -19,7 +19,7 @@ forge docs get payments --pages              # the pages, in menu order
 forge docs get payments api/errors.md -o json | jq -r .editUrl
 ```
 
-In the dashboard: the Docs page, and the Docs tab of a service.
+In the dashboard: the **TechDocs** page, and the Docs tab of a service.
 
 ## Search Docs
 
@@ -31,11 +31,11 @@ forge docs search --service payments refund  # one service's
 A page matches when it holds every word, in its title or anywhere in its
 text, in any case. Pages with the words in their title come first. Each
 result shows the first line that holds a word (`-o json` shows up to three).
-In the dashboard, type in the box on the Docs page: it narrows the services
+In the dashboard, type in the box on the TechDocs page: it narrows the services
 by name or team, and from two letters it searches every page too. The search
 box at the top of every page (Ctrl+K or ⌘K) does the same next to services,
 templates and pages: its last row, "Search all docs", opens every result on
-the Docs page.
+the TechDocs page.
 
 A page merged a minute ago is found: the search checks with GitHub first.
 

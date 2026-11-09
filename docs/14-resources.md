@@ -80,6 +80,10 @@ forge resource get payments/staging/main
 
 ## In the Dashboard
 
+The **Resources** page (a tab of the Catalog) lists the databases of every
+service in each environment, with their state and health; search them or
+pick an environment.
+
 A service's page has a **Resources** tab once it has a database or a plan.
 It lists each database per environment with its settings, its state, the
 health the cluster reports and the Secret with its connection string, and

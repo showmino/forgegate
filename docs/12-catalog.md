@@ -116,5 +116,12 @@ The name is never taken from forge.yaml: you always type it.
 
 ## In the Dashboard
 
-The Services page is the catalog. Each service's Settings page changes the
-owner, contacts and lifecycle, and its Danger zone holds the delete.
+The **Catalog** (`https://forge.example.com/services`) lists every service
+with its owner, its lifecycle and the environment where it hurts most,
+broken first. Search by name or team, or pick an owner or a status
+(**Needs attention**, **Healthy**, **Ready to promote**: staging runs a
+healthy commit production does not). Its tabs lead to the templates, the
+resources of every service and, for admins, the clusters.
+
+Each service's Settings page changes the owner, contacts and lifecycle, and
+its Danger zone holds the delete.

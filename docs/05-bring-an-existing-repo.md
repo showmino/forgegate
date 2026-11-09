@@ -63,6 +63,11 @@ the files without changing anything.
 
 The rest of this page is the long way, for a repo you want to set up by hand.
 
+With `--environments production`, the workflow Forge adds builds the image
+and deploys nothing: a person deploys it with `forge deploy start <name> --env
+production` (see
+[A Service With One Environment](07-deploy-and-release.md#a-service-with-one-environment)).
+
 ## What Forge Needs From the Repo
 
 | Need | Why |

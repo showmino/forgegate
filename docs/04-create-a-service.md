@@ -155,6 +155,27 @@ forge create shop --template nextjs --team web \
 Forge refuses an option the template does not offer. See [Run options](09-run-options.md)
 for what each one means.
 
+### Choose Its Environments
+
+A service has staging and production unless you pick one of them (Forge 0.50.0
+or later). This works for a template, `--image`, `--chart` and
+`forge service connect`:
+
+```sh
+forge create tool --template go-grpc --team platform --environments production
+forge create sandbox --image nginxinc/nginx-unprivileged:1.27 --health / --team web --environments staging
+```
+
+- **Production only**: CI builds the image and deploys nothing, because CI
+  only ever deploys to staging. A person deploys it:
+  `forge deploy start tool --env production`. The template's CI has no
+  `deploy` job, and `--image`/`--chart` deploy to production right after
+  the create.
+- **Staging only**: it runs in staging and is never promoted.
+
+Change it later with `forge service update <name> --environments ...`; see
+[Deploy and Release](07-deploy-and-release.md#a-service-with-one-environment).
+
 ## Run an Image Instead of a Template
 
 To run an image someone else built, such as nginx, a tool from a vendor or

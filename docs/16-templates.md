@@ -74,6 +74,7 @@ In `skeleton/`, file names and contents can use:
 | Value | What |
 | --- | --- |
 | `{% .Service.Name %}`, `.Service.Team`, `.Service.Owners` | The new service |
+| `.Service.Staging`, `.Service.Production` | Whether it has staging and production (both true unless picked at create). Leave out the CI job that deploys to staging without staging: `{%- if .Service.Staging %} ... {%- end %}` |
 | `{% .Repo.Owner %}`, `.Repo.Name`, `.Repo.URL` | Its repository |
 | `{% .Params.port %}` | A parameter, typed (an `int` is a number, a `bool` is true or false) |
 

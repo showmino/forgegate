@@ -234,11 +234,11 @@ forge create <name> (--template <template>[@version] | --image <image> | --chart
 --chart string               a published Helm chart to run instead of a template, by name; the service gets no repo
 --chart-repo string          with --chart: its repository, oci://<registry>/<path> or https://<host>/<path>
 --chart-version string       with --chart: one exact version, such as 6.7.1
---deploy                     with --image or --chart: deploy it to staging and watch the deploy (default true)
+--deploy                     with --image or --chart: deploy it to its first environment (staging, or production for one with production only) and watch the deploy (default true)
 --domain string              the public domain the service is reached under (run.domain); 'forge domain list' shows them, the default first
 --dry-run                    render and check without creating anything; print the files
 --env stringArray            run option: an environment variable as NAME=value (repeatable)
---environments strings       with an infrastructure template: its environments, staging and/or production (default: every one the target has)
+--environments strings       its deploy environments: staging, production or both (default both; an infrastructure template's default is every one its target has)
 --expose string              with --chart: the chart's Service that gets the address, as <service>:<port>
 --health string              with --image: the path its readiness is probed at (default /healthz)
 --image string               an image to run instead of a template, such as nginx:1.27; the service gets no repo
@@ -309,6 +309,24 @@ forge deploy promote [service] [flags]
 forge deploy promote payments --yes
 forge deploy promote payments --bump minor
 forge deploy promote payments --dry-run
+```
+
+### forge deploy remove
+
+Take down what a service runs in one environment.
+
+```text
+forge deploy remove [service] --env staging|production [flags]
+
+    --dry-run      check without taking anything down
+    --env string   staging or production
+    --wait         watch it until it ends (default true)
+-y, --yes          skip the confirmation prompt
+```
+
+```sh
+forge deploy remove payments --env staging
+forge deploy remove payments --env staging --dry-run
 ```
 
 ### forge deploy rollback
@@ -672,12 +690,13 @@ Connect an existing repo: Forge builds and deploys it.
 ```text
 forge service connect <repo> --team <team> [flags]
 
---dry-run         check the repo and list the files; change nothing
---health string   the path its readiness is probed at (default /healthz)
---name string     the service's name (default: the repo's name)
---owner strings   owner email or handle (repeatable)
---port int        the port the app listens on (default 8080)
---team string     owning team (it must be able to write to the repo)
+--dry-run                check the repo and list the files; change nothing
+--environments strings   its deploy environments: staging, production or both (default both)
+--health string          the path its readiness is probed at (default /healthz)
+--name string            the service's name (default: the repo's name)
+--owner strings          owner email or handle (repeatable)
+--port int               the port the app listens on (default 8080)
+--team string            owning team (it must be able to write to the repo)
 ```
 
 ```sh
@@ -821,6 +840,7 @@ forge service update [name] [flags]
 --depends-on strings     service this one depends on (repeatable)
 --display-name string    human-friendly name
 --dry-run                validate on the server without changing anything
+--environments strings   the deploy environments it has: staging, production or both
 --label stringToString   label as key=value (repeatable) (default [])
 --lifecycle string       experimental, production or deprecated
 --owner strings          owner email or handle (repeatable)
@@ -832,6 +852,7 @@ forge service update [name] [flags]
 ```sh
 forge service update payments --lifecycle deprecated
 forge service update payments --add-owner li@example.com --remove-owner ana@example.com
+forge service update payments --environments staging,production
 ```
 
 ## forge team

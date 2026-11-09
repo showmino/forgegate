@@ -267,6 +267,7 @@ forge create shop --template nextjs --team web --replicas 2 --env LOG_LEVEL=info
   --secret stripe=vaults/Apps/items/shop-stripe:STRIPE_KEY=credential --job 'cleanup=0 3 * * *:node cleanup.js'
 forge create payments --template go-grpc --team billing --dry-run
 forge create infra-network --template opentofu --target azure --environments production --team platform
+forge create shop --template nextjs-infra --set iac=bicep --target azure --team web --replicas 2
 forge create web --image nginxinc/nginx-unprivileged:1.27 --health / --team web
 forge create podinfo --chart podinfo --chart-repo oci://ghcr.io/stefanprodan/charts --chart-version 6.7.1 \
   --expose podinfo:9898 --values podinfo.yaml --team web

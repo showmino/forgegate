@@ -12,7 +12,9 @@ cloud access and deployment are set up.
 The platform must provide templates and a shared workflow for the providers
 and tools it offers.
 
-Forge does not deploy infrastructure itself or create preview environments.
+Forge does not deploy infrastructure itself or create preview environments
+for it. A repo may also hold a web app that Forge deploys; see
+[A Web App with Its Infrastructure](#a-web-app-with-its-infrastructure).
 Pull-request plans and what-if checks inspect the configured targets; they do
 not apply changes.
 
@@ -77,6 +79,62 @@ infrastructure/terraform/      (or infrastructure/bicep/) your code
 
 `forge.yaml` names the tool only. It cannot change the target or the
 environments: those are kept by Forge.
+
+## A Web App with Its Infrastructure
+
+A repo can also hold an app next to its infrastructure code: a web app that
+Forge deploys like any service, and the cloud resources it needs. Make one
+from a template whose `forge.yaml` has `run` as well as `infrastructure`,
+such as `nextjs-infra` (needs Forge 0.49.0 or later):
+
+```sh
+forge create shop --template nextjs-infra --target my-cloud --team web
+forge create shop --template nextjs-infra --set iac=bicep --target my-cloud --team web --replicas 2
+```
+
+`--set iac=bicep` picks Bicep; the default is OpenTofu. The run options of
+the template (`--replicas`, `--env`, `--secret`, ...) and
+`--internal`/`--domain` apply to the app. In the dashboard, the Create page
+asks for the target and environments and for the app's run options.
+
+The repo has the app at the root and the code in `infrastructure/`:
+
+```text
+.github/workflows/ci.yml       the app: tests, image, deploy to staging
+.github/workflows/deploy.yml   the infrastructure: calls the shared workflow
+forge.yaml                     run (the app) and infrastructure.tool
+app/ lib/ package.json ...     the Next.js app
+infrastructure/terraform/      (or infrastructure/bicep/) your code
+```
+
+The two ship separately:
+
+- **The app** ships as a service's: CI deploys `main` to staging, you
+  promote it to production, and a branch can get a preview
+  (`forge env create <name> --service shop --ref <branch>`). A preview runs
+  the app only, not the infrastructure.
+- **The infrastructure** ships as described below: every merge to `main`
+  deploys it to staging and asks for production's approval. That includes a
+  merge that changed only the app; its run then changes nothing, but it
+  still needs the approval, because Forge approves only the newest commit of
+  `main`.
+
+Forge does not pass the infrastructure's outputs to the app. After the first
+apply, give the app what it needs in `forge.yaml`: plain values in
+`run.env`, credentials in `run.secrets` (see
+[Run options](09-run-options.md)). The app's first deploy does not wait for
+the first apply, so the app should start without them.
+
+The service's page in the dashboard shows the app's deployments and
+previews, the infrastructure in its overview, and an **Approvals** tab.
+`forge service get shop` says `opentofu, deploys itself from GitHub Actions;
+its app runs on Forge`. Deleting the service takes down the app's
+deployments and previews, then the repo's GitHub environments and cloud
+access; what the infrastructure code deployed stays in the cloud.
+
+Whether a repo has an app is set when it is created. Adding `run` to the
+`forge.yaml` of an infrastructure repo made without one does not make Forge
+deploy it.
 
 ## Deploy to Production
 

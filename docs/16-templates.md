@@ -64,7 +64,10 @@ options: [replicas, resources, env, secrets, jobs, autoscaling]
   infrastructure code that deploys itself, for a target (see
   [Infrastructure Repos](21-infrastructure-repos.md)). Its `forge.yaml` must
   have `infrastructure.tool` (`opentofu`, `terraform` or `bicep`) and no
-  `run`, `chart` or `resources`; it takes no `options`.
+  `chart` or `resources`. With `run` as well, the repo also holds an app that
+  Forge deploys, and the template may offer `options` for it (see
+  [A Web App with Its Infrastructure](21-infrastructure-repos.md#a-web-app-with-its-infrastructure));
+  without `run`, it may not.
 
 In `skeleton/`, file names and contents can use:
 
@@ -82,7 +85,10 @@ forge template lint ./my-template
 ```
 
 Lint needs no login and no API. It checks `template.yaml`, renders the
-skeleton with sample values and exits 1 if anything is wrong.
+skeleton with sample values and exits 1 if anything is wrong. It renders
+once more for every other value of an `enum` parameter, so a template that
+picks its files by one (a folder whose name renders empty is left out) has
+each choice checked.
 
 ## Release
 

@@ -102,6 +102,44 @@ commit asked for. Rolling back to a deploy from before public addresses does
 not take the service off the internet, and a rollback never makes an internal
 staging public.
 
+## A Service With One Environment
+
+A service can have staging only or production only (chosen at
+[create](04-create-a-service.md#choose-its-environments); `forge service get`
+shows `environments`). Forge refuses a deploy or a rollback in an
+environment the service does not have, and a promote unless it has both;
+each refusal says what to do:
+
+```text
+error: services/tool has production only, not staging: add it with 'forge service update tool --environments staging,production'
+```
+
+A production-only service is deployed by a person. The deploy cuts the
+final version, as a promote does:
+
+```sh
+forge deploy start tool --env production
+```
+
+Its owning team changes the environments:
+
+```sh
+forge service update sandbox --environments staging,production   # add production
+forge deploy remove tool --env staging --yes                     # take staging down first...
+forge service update tool --environments production              # ...then drop it
+```
+
+`forge deploy remove` takes down what runs in one environment: its version
+leaves the GitOps repo, Argo CD removes its workloads, Forge its namespace.
+The service stays in the catalog, with its other environment and previews.
+An environment that still runs something cannot be dropped:
+
+```text
+error: services/tool still runs in staging: take it down first with 'forge deploy remove tool --env staging'
+```
+
+An infrastructure repo keeps the environments it was made with.
+
 ## Versions
 
 | Where | Version | Example |

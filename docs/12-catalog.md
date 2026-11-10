@@ -60,6 +60,33 @@ percentage such as `99.9%`. `--tier 0` and `--slo ""` clear them. Both can
 also start in forge.yaml (`service.tier`, `service.slo`), which Forge reads
 when it creates or registers the service; after that, change them here.
 
+## The Golden Path
+
+Forge checks five things that every service should have:
+
+| Check | Passes when |
+| --- | --- |
+| CI pipeline | CI deployed it to staging in the last 30 days, or its repo has a workflow in `.github/workflows` |
+| SLO defined | It has an SLO target (`--slo`) |
+| Tracing | It sends traces with OpenTelemetry: `tracing: true` in forge.yaml, or `--tracing` |
+| Runbook | Its repo has `docs/runbook.md` |
+| On-call rotation | Its team has one (below) |
+
+A service with no repo (it runs an image or a chart) skips CI and the
+runbook.
+
+```sh
+forge service checks                 # every service: passed, and what is missing
+forge service checks --missing       # only the ones that miss something
+forge service checks payments        # each check, and what to do about it
+forge service update payments --tracing
+```
+
+Forge reads what the repo holds at most every five minutes, so a runbook
+you just merged can take that long to count. In the dashboard, a service's
+page has a **Golden path** card, and the Catalog's status **Off the golden
+path** lists the services that miss a check.
+
 ## A Team's On-Call
 
 `forge team list` shows each team's members (from GitHub) and its on-call

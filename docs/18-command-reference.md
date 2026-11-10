@@ -705,6 +705,23 @@ forge service connect github.com/my-org/legacy-api --name billing-api --team bil
 forge service connect github.com/my-org/tool --team web --dry-run
 ```
 
+### forge service checks
+
+Show how far services are on the golden path.
+
+```text
+forge service checks [name] [flags]
+
+--missing   only the services that miss a check
+```
+
+```sh
+forge service checks
+forge service checks --missing
+forge service checks payments
+forge service checks -o json | jq -r '.services[] | select(.passed < .applies) | .service'
+```
+
 ### forge service delete
 
 Delete a service and everything it runs.
@@ -849,6 +866,7 @@ forge service update [name] [flags]
 --slo string             its availability target, such as 99.9%; "" clears it
 --team string            owning team
 --tier int               how critical it is: 1 critical, 2 high, 3 medium; 0 clears it
+--tracing                it sends traces with OpenTelemetry; --tracing=false clears it
 ```
 
 ```sh

@@ -23,6 +23,7 @@ service:
   lifecycle: production           # experimental, production or deprecated
   tier: 1                         # 1 critical, 2 high, 3 medium
   slo: "99.9%"                    # its availability target
+  tracing: true                   # it sends traces with OpenTelemetry
   repo: https://github.com/my-org/payments
   dependencies: [ledger]          # services this one calls
   labels: {cost-center: "cc-1042"}
@@ -75,6 +76,7 @@ docs:                             # optional: the order and titles of docs pages
 | `lifecycle` | no | `experimental` (default), `production` or `deprecated` |
 | `tier` | no | How critical it is: `1` critical, `2` high, `3` medium |
 | `slo` | no | Its availability target, a percentage in quotes, such as `"99.9%"` |
+| `tracing` | no | `true` when it sends traces with OpenTelemetry (a golden-path check) |
 | `repo` | no | The repo's URL. CI deploys only work when it is exactly `https://github.com/<org>/<repo>` |
 | `dependencies` | no | Names of services this one depends on (`forge service deps`) |
 | `labels` | no | Free key/value pairs |

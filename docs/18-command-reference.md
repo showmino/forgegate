@@ -151,6 +151,22 @@ forge approval request -o name
 
 ## forge audit
 
+### forge audit adoption
+
+Show how much Forge is used.
+
+```text
+forge audit adoption [flags]
+
+--weekly   the last 12 weeks, one row each
+```
+
+```sh
+forge audit adoption
+forge audit adoption --weekly
+forge audit adoption -o json | jq '.last'
+```
+
 ### forge audit get
 
 Show one audit event.

@@ -116,6 +116,45 @@ forge auth session revoke ses_4f2a9c1d0b3e5a67 # end one you no longer trust
 forge auth logout                             # end this machine's session
 ```
 
+## Personal Tokens for CI and Scripts
+
+A script or a CI job outside a service's own repo calls Forge with a personal
+token, as `FORGE_TOKEN`. It acts as you, with your role, and only within what
+you let it do:
+
+```sh
+forge token create ci-deploys --scope deploy --expires 30d   # prints the token once
+forge token list
+forge token revoke ci-deploys
+```
+
+| Scope | It may |
+| --- | --- |
+| `read` (always) | Read services, deploys, logs and everything else you can see |
+| `deploy` | Also deploy, promote, roll back, manage previews, and cancel those deploys and previews |
+| `settings` | Also make every other change you may make, including chart values |
+
+- It expires after 7 to 365 days (`--expires 90d`), or `never`.
+- It ends when you revoke it or leave the organization. If you leave a team,
+  it loses what that team gave you within the hour.
+- A token cannot make or revoke tokens or sessions: only your login can
+  (`forge auth login` or the dashboard, not a raw ID token).
+- No token approves or rejects a production run, asks for or revokes an
+  exception, sets a rule's mode or a team's on-call: you do those yourself.
+- The audit log names the token behind each change.
+- You may have up to 20.
+
+In the dashboard, **Your settings** (your name at the foot of the sidebar)
+lists your tokens and makes and revokes them.
+
+```sh
+export FORGE_TOKEN=fgp_...
+forge deploy start payments --env staging
+```
+
+A service's own CI needs no personal token: its workflow signs in as the
+repo (see [Deploy and release](07-deploy-and-release.md#from-ci)).
+
 ## Use the API Directly
 
 `forge auth token` prints a valid bearer token, which is useful with `curl`:

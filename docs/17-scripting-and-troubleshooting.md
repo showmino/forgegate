@@ -61,9 +61,10 @@ The first of these that is set wins:
 
 `forge -v <command>` prints where each setting came from.
 
-`FORGE_TOKEN` replaces your stored login. CI uses it with a token Forge
-issues for the workflow (see [Deploy and release](07-deploy-and-release.md#from-ci));
-do not put a personal session in it.
+`FORGE_TOKEN` replaces your stored login. A service's CI uses it with a token
+Forge issues for the workflow (see [Deploy and release](07-deploy-and-release.md#from-ci));
+other scripts use a [personal token](02-install-and-login.md#personal-tokens-for-ci-and-scripts)
+(`forge token create`). Do not put your session in it.
 
 ## Troubleshooting
 

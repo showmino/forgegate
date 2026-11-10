@@ -590,6 +590,37 @@ forge op watch op_9f2c4a1b0c3d
 forge op watch op_9f2c4a1b0c3d --timeout 5m
 ```
 
+## forge policy
+
+### forge policy list
+
+List the rules and their modes.
+
+```text
+forge policy list [flags]
+```
+
+```sh
+forge policy list
+forge policy list -o json | jq -r '.rules[] | select(.mode != .defaultMode) | .name'
+```
+
+### forge policy set
+
+Set a rule's mode.
+
+```text
+forge policy set <rule> --mode enforce|warn|off [flags]
+
+--dry-run       validate on the server without changing anything
+--mode string   enforce, warn or off
+```
+
+```sh
+forge policy set images.pinned-version --mode warn
+forge policy set resources.production-ha --mode enforce --dry-run
+```
+
 ## forge resource
 
 ### forge resource apply
@@ -975,9 +1006,10 @@ Check whether you may do an action, on a service or (for `service.create`,
 0 or 5. The actions: `service.create`, `service.create.any_team`,
 `service.register`, `service.update`, `service.update.team`, `service.delete`,
 `service.address`, `deploy.start`, `deploy.promote`, `deploy.rollback`,
-`environment.create`, `environment.extend`, `environment.destroy`,
-`operation.cancel`, `resource.plan`, `resource.apply`,
-`resource.apply.production`, `cluster.read`.
+`deploy.remove`, `environment.create`, `environment.extend`,
+`environment.destroy`, `operation.cancel`, `resource.plan`, `resource.apply`,
+`resource.apply.production`, `cluster.read`, `approval.decide`,
+`approval.exception`, `team.update`, `rule.update`.
 
 ```text
 forge auth can <action> [service] [flags]

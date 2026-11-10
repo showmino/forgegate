@@ -21,9 +21,11 @@ service:
   team: billing                   # the owning GitHub team
   owners: [ana@example.com]       # optional people, besides the team
   lifecycle: production           # experimental, production or deprecated
+  tier: 1                         # 1 critical, 2 high, 3 medium
+  slo: "99.9%"                    # its availability target
   repo: https://github.com/my-org/payments
   dependencies: [ledger]          # services this one calls
-  labels: {tier: "1"}
+  labels: {cost-center: "cc-1042"}
 
 run:
   port: 8080                      # default 8080
@@ -71,6 +73,8 @@ docs:                             # optional: the order and titles of docs pages
 | `displayName` | no | A name for people |
 | `owners` | no | People who own it, besides the team |
 | `lifecycle` | no | `experimental` (default), `production` or `deprecated` |
+| `tier` | no | How critical it is: `1` critical, `2` high, `3` medium |
+| `slo` | no | Its availability target, a percentage in quotes, such as `"99.9%"` |
 | `repo` | no | The repo's URL. CI deploys only work when it is exactly `https://github.com/<org>/<repo>` |
 | `dependencies` | no | Names of services this one depends on (`forge service deps`) |
 | `labels` | no | Free key/value pairs |

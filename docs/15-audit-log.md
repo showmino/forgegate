@@ -43,6 +43,31 @@ forge audit get 1234
 | `--since`, `--until` | A duration back from now (`24h`, `7d`) or an RFC 3339 time |
 | `--limit` | The most events to show (default 50) |
 
+## Is Forge Used?
+
+```sh
+forge audit adoption            # the last 30 days, and the 30 before
+forge audit adoption --weekly   # the last 12 weeks
+```
+
+```text
+              LAST 30 DAYS    30 DAYS BEFORE
+people        5               4
+deploys       42              30
+self-served   75% (15 of 20)  60% (6 of 10)
+```
+
+- **people**: everyone who changed something through Forge.
+- **deploys**: deploys, promotions and rollbacks started, by people and by CI.
+- **self-served**: the share of people's changes made by members outside the
+  admin groups. Each event records the person's role as the detail `role`
+  (`admin` or `member`) since Forge 0.54.0; older changes do not count here.
+
+Dry runs and refused calls do not count. The numbers are at most five
+minutes old. In the dashboard, the **Adoption** page shows them with what is
+stuck (teams with no service, failing services, services off the golden
+path, teams without on-call, resources not ready) and the last 12 weeks.
+
 ## In the Dashboard
 
 The Audit log page has the same filters.

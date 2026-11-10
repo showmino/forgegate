@@ -954,6 +954,50 @@ forge team update billing --oncall billing-primary
 forge team update billing --oncall ""
 ```
 
+## forge token
+
+### forge token create
+
+Make a personal token.
+
+```text
+forge token create <name> [flags]
+
+--dry-run          validate on the server without making it
+--expires string   days until it expires (1d to 365d), or never (default "30d")
+--scope strings    deploy or settings, besides read (repeatable)
+```
+
+```sh
+forge token create ci-deploys --scope deploy --expires 30d
+forge token create nightly-report --expires 7d
+```
+
+### forge token list
+
+List your personal tokens.
+
+```text
+forge token list [flags]
+```
+
+```sh
+forge token list
+forge token list -o json | jq -r '.tokens[].displayName'
+```
+
+### forge token revoke
+
+Revoke one of your personal tokens at once.
+
+```text
+forge token revoke <name> [flags]
+```
+
+```sh
+forge token revoke ci-deploys
+```
+
 ## forge template
 
 ### forge template get

@@ -70,4 +70,6 @@ These guard Forge and every team on it, so no one can switch them:
 - An infrastructure repo deploys only to a target of its team, with the
   environment it asks for and room for it.
 
-If Forge cannot read the modes, every rule has its default.
+If Forge cannot read the modes, every switchable rule is enforced. Each
+audit event of an action Forge checked says which modes differed from the
+defaults (`policy_modes`).

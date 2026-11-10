@@ -108,7 +108,9 @@ dashboard: a plan needs the `resources` list from your `forge.yaml`.
 | Production with fewer than 2 instances, or any environment with more than 3 | denied |
 | Staging with more than 1 instance | warning |
 
-A denied plan prints each reason and exits 5.
+A denied plan prints each reason and exits 5. An admin can make the storage
+limit, the instance counts and the staging warning stricter or softer: see
+[Rules](22-rules.md). The other rules always hold.
 
 ## Grow a Database
 

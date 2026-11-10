@@ -846,11 +846,14 @@ forge service update [name] [flags]
 --owner strings          owner email or handle (repeatable)
 --remove-owner strings   remove an owner (repeatable)
 --repo string            source repository URL
+--slo string             its availability target, such as 99.9%; "" clears it
 --team string            owning team
+--tier int               how critical it is: 1 critical, 2 high, 3 medium; 0 clears it
 ```
 
 ```sh
 forge service update payments --lifecycle deprecated
+forge service update payments --tier 1 --slo 99.95%
 forge service update payments --add-owner li@example.com --remove-owner ana@example.com
 forge service update payments --environments staging,production
 ```
@@ -868,6 +871,22 @@ forge team list [flags]
 ```sh
 forge team list
 forge team list -o json | jq -r '.teams[].name'
+```
+
+### forge team update
+
+Set a team's on-call rotation.
+
+```text
+forge team update <team> --oncall <rotation> [flags]
+
+--dry-run         validate on the server without changing anything
+--oncall string   the rotation's name; "" removes it
+```
+
+```sh
+forge team update billing --oncall billing-primary
+forge team update billing --oncall ""
 ```
 
 ## forge template

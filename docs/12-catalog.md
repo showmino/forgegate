@@ -5,7 +5,7 @@ sidebar_position: 13
 # The Catalog
 
 The catalog is the list of every service: its name, owning team, owners,
-lifecycle, repo, dependencies and labels.
+lifecycle, tier, SLO target, repo, dependencies and labels.
 
 ## Find Services
 
@@ -36,7 +36,8 @@ Only the flags you pass change:
 forge service update payments --lifecycle production
 forge service update payments --team billing
 forge service update payments --add-owner li@example.com --remove-owner ana@example.com
-forge service update payments --display-name "Payments API" --label tier=1
+forge service update payments --tier 1 --slo 99.95%
+forge service update payments --display-name "Payments API" --label cost-center=cc-1042
 forge service update payments --depends-on ledger --depends-on fx
 forge service update payments --repo https://github.com/my-org/payments
 forge service update payments --lifecycle deprecated --dry-run
@@ -47,6 +48,30 @@ forge service update payments --lifecycle deprecated --dry-run
 | `experimental` | New, not relied on yet (the default) |
 | `production` | Others rely on it |
 | `deprecated` | Being retired. Do not build on it |
+
+| Tier | Meaning |
+| --- | --- |
+| `1` | Critical: an outage stops the business |
+| `2` | High: an outage hurts, with a way around it |
+| `3` | Medium: it can wait for working hours |
+
+The SLO target is the availability the service promises, written as a
+percentage such as `99.9%`. `--tier 0` and `--slo ""` clear them. Both can
+also start in forge.yaml (`service.tier`, `service.slo`), which Forge reads
+when it creates or registers the service; after that, change them here.
+
+## A Team's On-Call
+
+`forge team list` shows each team's members (from GitHub) and its on-call
+rotation, the name your paging tool gives it. An admin sets it:
+
+```sh
+forge team update billing --oncall billing-primary
+forge team update billing --oncall ""      # remove it
+```
+
+A team that owns services but has no rotation is pointed out on the
+dashboard's Ownership page and on an admin's home page.
 
 Keep forge.yaml's `service:` section in step with the catalog entry.
 
@@ -117,11 +142,12 @@ The name is never taken from forge.yaml: you always type it.
 ## In the Dashboard
 
 The **Catalog** (`https://forge.example.com/services`) lists every service
-with its owner, its lifecycle and the environment where it hurts most,
-broken first. Search by name or team, or pick an owner or a status
+with its owner, its tier and the environment where it hurts most, broken
+first. Search by name or team, or pick an owner, a tier or a status
 (**Needs attention**, **Healthy**, **Ready to promote**: staging runs a
 healthy commit production does not). Its tabs lead to the templates, the
 resources of every service and, for admins, the clusters.
 
-Each service's Settings page changes the owner, contacts and lifecycle, and
+Each service's Settings page changes the owner, contacts, lifecycle, tier
+and SLO target, and
 its Danger zone holds the delete.

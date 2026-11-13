@@ -893,6 +893,43 @@ forge service register            # from ./forge.yaml
 forge service register ledger --team billing --depends-on payments --dry-run
 ```
 
+### forge service restart
+
+Restart a service's pods in one environment, one at a time, with no new
+deploy.
+
+```text
+forge service restart [service] --env staging|production [flags]
+
+    --dry-run      check without restarting
+    --env string   staging or production
+    --wait         watch it until the pods are healthy (default true)
+```
+
+```sh
+forge service restart payments --env production
+forge service restart payments --env staging --dry-run
+```
+
+### forge service scale
+
+Set how many pods a service runs in one environment (1 to 10), until its next
+deploy, promote or rollback.
+
+```text
+forge service scale [service] --env staging|production --replicas <n> [flags]
+
+    --dry-run          check without scaling
+    --env string       staging or production
+    --replicas int32   how many pods, 1 to 10
+    --wait             watch it until the pods are healthy (default true)
+```
+
+```sh
+forge service scale payments --env production --replicas 4
+forge service scale payments --env staging --replicas 2 --dry-run
+```
+
 ### forge service update
 
 Change fields of a service.
@@ -1066,7 +1103,7 @@ Check whether you may do an action, on a service or (for `service.create`,
 0 or 5. The actions: `service.create`, `service.create.any_team`,
 `service.register`, `service.update`, `service.update.team`, `service.delete`,
 `service.address`, `deploy.start`, `deploy.promote`, `deploy.rollback`,
-`deploy.remove`, `environment.create`, `environment.extend`,
+`deploy.remove`, `deploy.restart`, `deploy.scale`, `environment.create`, `environment.extend`,
 `environment.destroy`, `operation.cancel`, `resource.plan`, `resource.apply`,
 `resource.apply.production`, `cluster.read`, `approval.decide`,
 `approval.exception`, `team.update`, `rule.update`.

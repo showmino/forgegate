@@ -131,7 +131,7 @@ forge token revoke ci-deploys
 | Scope | It may |
 | --- | --- |
 | `read` (always) | Read services, deploys, logs and everything else you can see |
-| `deploy` | Also deploy, promote, roll back, manage previews, and cancel those deploys and previews |
+| `deploy` | Also deploy, promote, roll back, restart and scale, manage previews, and cancel those operations |
 | `settings` | Also make every other change you may make, including chart values |
 
 - It expires after 7 to 365 days (`--expires 90d`), or `never`.

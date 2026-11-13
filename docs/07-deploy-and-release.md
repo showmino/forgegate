@@ -102,6 +102,42 @@ commit asked for. Rolling back to a deploy from before public addresses does
 not take the service off the internet, and a rollback never makes an internal
 staging public.
 
+## Restart and Scale
+
+Between deploys, the service's team can give an environment new pods or
+change how many it runs:
+
+```sh
+forge service restart payments --env production                 # new pods, the same version
+forge service scale payments --env production --replicas 4      # 1 to 10 pods
+forge service scale payments --env staging --replicas 2 --dry-run
+```
+
+- **Restart** replaces the pods one at a time, each new one ready before an
+  old one stops. Forge marks the pods in the GitOps repo, and Argo CD rolls
+  them.
+- **Scale** sets the pod count until the next deploy, promote or rollback of
+  that environment. That deploy runs `forge.yaml`'s count again: `run.replicas`
+  in production, one pod in staging. To keep a production count, set
+  `run.replicas` (see [Run Options](./09-run-options.md)).
+- Both wait until the pods are healthy (`--wait=false` returns at once with the
+  operation). Neither is a deploy, so `forge deploy history` and a rollback
+  skip them. The [audit log](./15-audit-log.md) records them as
+  `deploy.restart` and `deploy.scale`.
+- An autoscaled environment (`run.autoscaling`) refuses a scale, because KEDA
+  sets its count; change `run.autoscaling` instead. A service that runs a
+  chart refuses both: its chart decides its pods.
+- A personal token can do both with the `deploy` scope.
+
+```text
+$ forge service scale payments --env production --replicas 4
+deployments/payments/production runs 4 pods (was 2) until the next deploy; set run.replicas: 4 in forge.yaml to keep it.
+```
+
+A restart needs the service chart of the same release as forge-api, which is
+the default. A Forge that pins an older one (`deploys.chartRevision`) accepts
+the restart, but the pods are not replaced.
+
 ## A Service With One Environment
 
 A service can have staging only or production only (chosen at
@@ -280,3 +316,7 @@ Promote and Roll back buttons behind a confirmation. For a service that runs
 an image, **Deploy** asks for an image tag instead of a branch; left empty,
 it is the tag in the service's forge.yaml. Such a service offers no preview
 environments.
+
+Its **Actions** tab, for the service's team, shows each environment's pod
+count, whether it is autoscaled and when it was last restarted, with
+**Restart** and **Scale** (see [Restart and Scale](#restart-and-scale)).

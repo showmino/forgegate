@@ -140,7 +140,7 @@ forge token revoke ci-deploys
 - A token cannot make or revoke tokens or sessions: only your login can
   (`forge auth login` or the dashboard, not a raw ID token).
 - No token approves or rejects a production run, asks for or revokes an
-  exception, sets a rule's mode or a team's on-call: you do those yourself.
+  exception, or sets a rule's mode: you do those yourself.
 - The audit log names the token behind each change.
 - You may have up to 20.
 

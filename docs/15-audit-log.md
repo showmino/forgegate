@@ -65,8 +65,8 @@ self-served   75% (15 of 20)  60% (6 of 10)
 
 Dry runs and refused calls do not count. The numbers are at most five
 minutes old. In the dashboard, the **Adoption** page shows them with what is
-stuck (teams with no service, failing services, services off the golden
-path, teams without on-call, resources not ready) and the last 12 weeks.
+stuck (teams with no service, failing services, resources not ready) and
+the last 12 weeks.
 
 ## In the Dashboard
 

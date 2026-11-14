@@ -752,23 +752,6 @@ forge service connect github.com/my-org/legacy-api --name billing-api --team bil
 forge service connect github.com/my-org/tool --team web --dry-run
 ```
 
-### forge service checks
-
-Show how far services are on the golden path.
-
-```text
-forge service checks [name] [flags]
-
---missing   only the services that miss a check
-```
-
-```sh
-forge service checks
-forge service checks --missing
-forge service checks payments
-forge service checks -o json | jq -r '.services[] | select(.passed < .applies) | .service'
-```
-
 ### forge service delete
 
 Delete a service and everything it runs.
@@ -950,7 +933,6 @@ forge service update [name] [flags]
 --slo string             its availability target, such as 99.9%; "" clears it
 --team string            owning team
 --tier int               how critical it is: 1 critical, 2 high, 3 medium; 0 clears it
---tracing                it sends traces with OpenTelemetry; --tracing=false clears it
 ```
 
 ```sh
@@ -973,22 +955,6 @@ forge team list [flags]
 ```sh
 forge team list
 forge team list -o json | jq -r '.teams[].name'
-```
-
-### forge team update
-
-Set a team's on-call rotation.
-
-```text
-forge team update <team> --oncall <rotation> [flags]
-
---dry-run         validate on the server without changing anything
---oncall string   the rotation's name; "" removes it
-```
-
-```sh
-forge team update billing --oncall billing-primary
-forge team update billing --oncall ""
 ```
 
 ## forge token
@@ -1106,7 +1072,7 @@ Check whether you may do an action, on a service or (for `service.create`,
 `deploy.remove`, `deploy.restart`, `deploy.scale`, `environment.create`, `environment.extend`,
 `environment.destroy`, `operation.cancel`, `resource.plan`, `resource.apply`,
 `resource.apply.production`, `cluster.read`, `approval.decide`,
-`approval.exception`, `team.update`, `rule.update`.
+`approval.exception`, `rule.update`.
 
 ```text
 forge auth can <action> [service] [flags]

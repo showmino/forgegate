@@ -91,6 +91,7 @@ port 8080 with the probe on `/healthz`.
 | Field | Meaning | More |
 | --- | --- | --- |
 | `image` | Only for a service without a repo: the image it runs, such as `nginxinc/nginx-unprivileged:1.27`, which Forge writes in full (`docker.io/nginxinc/nginx-unprivileged:1.27`). It must run as a non-root user given by number. Such a forge.yaml lives in the deploy repo; a repo's own forge.yaml may not have it | [Create a service](04-create-a-service.md#run-an-image-instead-of-a-template) |
+| `worker` | `true` for a service that serves nothing, such as a queue consumer: no port, no health check, no address. `port`, `health`, `domain`, `host` and `staging` are then not allowed. Needs Forge 0.58.0 or later | [Workers](09-run-options.md#workers) |
 | `port` | The HTTP port the app listens on (also given to it as `$PORT`) | |
 | `health` | The path probed for readiness and liveness. It should answer 200 without calling other services | |
 | `writable` | Folders the app writes besides `/tmp`, up to 8, such as `/var/cache/nginx`. The root filesystem is read-only; each folder starts empty on every start, as `/tmp` does. Not `/`, `/tmp`, `/proc`, `/dev`, `/sys` or `/var/run/secrets`, nor a folder inside them | [Create a service](04-create-a-service.md#run-an-image-instead-of-a-template) |

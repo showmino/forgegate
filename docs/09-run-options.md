@@ -101,6 +101,41 @@ When both services are parts of the same
 [application](12-catalog.md#applications), let Forge set the address: see
 [Linking Parts](12-catalog.md#linking-parts).
 
+## Workers
+
+A service that serves nothing, such as a queue consumer or a scheduler, is
+a worker. Say so in forge.yaml:
+
+```yaml
+service:
+  name: shop-worker
+  team: billing
+run:
+  worker: true
+  replicas: 2
+  env:
+    QUEUE: orders
+```
+
+A worker runs the same way as any service, with these differences:
+
+- It has no port and no health check. Its pod is ready as soon as its
+  process runs, and is restarted when the process exits. So exit with an
+  error when the worker cannot do its job, rather than hanging.
+- It has no address: no URL in `forge deploy status`, nothing to set with
+  `forge service address`, and no `PORT` variable.
+- `run.port`, `run.health`, `run.domain`, `run.host` and `run.staging` are
+  refused together with `worker: true`.
+- It has no preview environment: `forge env create` refuses it. Try a
+  change in staging instead.
+- Another part cannot link to it, since it has no address. The worker
+  itself can have [links](12-catalog.md#linking-parts), and can use another
+  part's [shared database](12-catalog.md#sharing-a-database).
+
+Deploys, versions, promote and rollback, replicas, autoscaling, resources,
+`env`, `secrets`, `jobs`, restart and scale work as for any service. A
+service that runs a Helm chart cannot be a worker.
+
 ## Secrets From 1Password
 
 ```yaml

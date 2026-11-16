@@ -60,6 +60,43 @@ percentage such as `99.9%`. `--tier 0` and `--slo ""` clear them. Both can
 also start in forge.yaml (`service.tier`, `service.slo`), which Forge reads
 when it creates or registers the service; after that, change them here.
 
+## Applications
+
+Services that belong together (a web app, its API and its worker) can be
+grouped into an application. Each service stays what it is, with its own
+page, deploys and history; the application is the name they share.
+
+Make a service a part of an application:
+
+```sh
+forge service update shop --application shop
+forge service update shop-api --application shop
+forge service update shop-worker --application shop
+```
+
+A new service can also start as a part, with `service.application` in its
+forge.yaml. `--application ""` takes a service out again. An application
+exists while a service names it: there is nothing to create first and
+nothing to delete after.
+
+```sh
+forge application list
+forge application get shop
+```
+
+`list` shows each application with its team and how many parts it has.
+`get` shows every part with the version it runs in staging and in
+production; a part that is not healthy says so next to its version.
+
+Two rules keep applications in order:
+
+- **Every part has the same team.** A service of another team is refused.
+  To move an application to another team, take its parts out, move them,
+  and put them back.
+- **An application's name is its own.** It may equal the name of one of
+  its parts (`shop` with the parts `shop`, `shop-api` and `shop-worker`),
+  but not the name of a service outside it.
+
 ## Teams
 
 `forge team list` shows the organization's teams and how many members each

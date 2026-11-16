@@ -21,6 +21,36 @@ for the current release. The other pages explain when to use which.
 -v, --verbose            print request IDs and where settings came from
 ```
 
+## forge application
+
+See the applications services are grouped into. See [The Catalog](12-catalog.md#applications).
+
+### forge application get
+
+Show an application's parts and what each runs.
+
+```text
+forge application get <name> [flags]
+```
+
+```sh
+forge application get shop
+forge application get shop -o json
+```
+
+### forge application list
+
+List the applications.
+
+```text
+forge application list [flags]
+```
+
+```sh
+forge application list
+forge application list -o json | jq -r '.applications[].name'
+```
+
 ## forge approval
 
 Approve the production runs of infrastructure repos. See [Infrastructure Repos](21-infrastructure-repos.md).
@@ -921,6 +951,7 @@ Change fields of a service.
 forge service update [name] [flags]
 
 --add-owner strings      add an owner (repeatable)
+--application string     the application it is a part of; "" takes it out
 --depends-on strings     service this one depends on (repeatable)
 --display-name string    human-friendly name
 --dry-run                validate on the server without changing anything
@@ -938,6 +969,7 @@ forge service update [name] [flags]
 ```sh
 forge service update payments --lifecycle deprecated
 forge service update payments --tier 1 --slo 99.95%
+forge service update shop-worker --application shop
 forge service update payments --add-owner li@example.com --remove-owner ana@example.com
 forge service update payments --environments staging,production
 ```

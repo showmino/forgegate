@@ -86,7 +86,8 @@ forge application get shop
 
 `list` shows each application with its team and how many parts it has.
 `get` shows every part with the version it runs in staging and in
-production; a part that is not healthy says so next to its version.
+production, and the parts it links to; a part that is not healthy says so
+next to its version.
 
 Two rules keep applications in order:
 
@@ -96,6 +97,54 @@ Two rules keep applications in order:
 - **An application's name is its own.** It may equal the name of one of
   its parts (`shop` with the parts `shop`, `shop-api` and `shop-worker`),
   but not the name of a service outside it.
+
+### Linking Parts
+
+A part that calls another part of its application names it in `run.links`
+in its forge.yaml:
+
+```yaml
+service:
+  name: shop
+  team: billing
+  application: shop
+run:
+  links: [shop-api]
+```
+
+At every deploy and promote Forge gives the pods one variable per link: the
+part's name in capitals, with `-` as `_`, then `_URL`. Here that is
+`SHOP_API_URL`, and it holds the address of `shop-api` inside the cluster in
+the same environment:
+
+| Environment | `SHOP_API_URL` |
+| --- | --- |
+| staging | `http://shop-api.shop-api-staging.svc` |
+| production | `http://shop-api.shop-api-production.svc` |
+
+So staging calls staging and production calls production, with nothing to
+build from `FORGE_ENVIRONMENT`. The address is inside the cluster: it works
+whether or not the linked part has a public address.
+
+```js
+const res = await fetch(`${process.env.SHOP_API_URL}/orders`);
+```
+
+What to know:
+
+- Both services must be parts of the same application in the catalog
+  (`forge application get shop`). Otherwise the deploy is refused, and
+  says which service is missing from the application.
+- Forge does not check that the linked part runs yet, and orders nothing:
+  deploy the parts in any order, and let your code cope with a neighbour
+  that is briefly not there.
+- A name in `links` cannot also be set in `env` or `secrets`
+  (`SHOP_API_URL` is then taken), and a service cannot link to itself.
+- A part that runs a chart can be linked to (the address is the Service its
+  `chart.expose` names), but cannot have links of its own.
+- A preview gets no links, as it gets no `env`.
+- `forge application get shop` shows each part's links in the column
+  LINKS TO.
 
 ## Teams
 

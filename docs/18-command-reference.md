@@ -51,6 +51,59 @@ forge application list
 forge application list -o json | jq -r '.applications[].name'
 ```
 
+### forge application promote
+
+Promote every part of an application to production.
+
+```text
+forge application promote <name> [flags]
+
+    --bump string   how far each part's version goes up: patch (default), minor or major
+    --dry-run       check without promoting
+    --wait          watch the promotion until it ends (default true)
+-y, --yes           skip the confirmation prompt
+```
+
+```sh
+forge application promote shop --dry-run
+forge application promote shop --yes
+forge application promote shop --bump minor
+```
+
+### forge application releases
+
+List an application's releases.
+
+```text
+forge application releases <name> [flags]
+
+--limit int   at most this many (default 20)
+```
+
+```sh
+forge application releases shop
+forge application releases shop -o json
+```
+
+### forge application rollback
+
+Return every part of an application to an earlier release.
+
+```text
+forge application rollback <name> [flags]
+
+    --dry-run   check without rolling back
+    --to int    the release to return to (default: the one before the newest)
+    --wait      watch the rollback until it ends (default true)
+-y, --yes       skip the confirmation prompt
+```
+
+```sh
+forge application rollback shop --dry-run
+forge application rollback shop --yes
+forge application rollback shop --to 6
+```
+
 ## forge approval
 
 Approve the production runs of infrastructure repos. See [Infrastructure Repos](21-infrastructure-repos.md).

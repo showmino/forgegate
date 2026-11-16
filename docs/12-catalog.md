@@ -209,6 +209,85 @@ What to know:
 - Sharing needs the platform to run Forge from the `forge` chart at 0.58.0
   or later.
 
+### Releasing an Application
+
+Each part deploys to staging on its own, from its own CI. Production moves
+together.
+
+See what a promotion would do, then do it:
+
+```sh
+forge application promote shop --dry-run
+forge application promote shop
+```
+
+The promotion is one operation. It takes every part whose staging differs
+from production and promotes them one at a time: a part after the parts it
+links to, and otherwise by name. Each part is promoted exactly as
+`forge deploy promote` would do it, under the same
+[rules](22-rules.md), and gets its own version. A part that production
+already runs is left alone.
+
+**If a part fails**, the promotion stops, and that part and the parts
+promoted before it are put back to what they ran. Production is not left
+half promoted. The operation ends as failed and says which part failed and
+what was put back. A part that was new in production has nothing to go back
+to: it stays, and the message says so.
+
+A promotion that succeeds records a **release**: a number, and what every
+part ran in production then.
+
+```sh
+forge application releases shop
+```
+
+```text
+RELEASE   WHEN               BY                PARTS                                               NOTE
+7         2026-11-16 14:02   ana@example.com   shop v1.4.0, shop-api v2.1.3, shop-worker v0.9.0
+6         2026-11-12 09:40   ana@example.com   shop v1.3.2, shop-api v2.1.2, shop-worker v0.9.0
+```
+
+To go back a release, or to any release by its number:
+
+```sh
+forge application rollback shop --dry-run
+forge application rollback shop
+forge application rollback shop --to 5
+```
+
+Without `--to`, a rollback goes to the release before the newest. If
+production has moved since the newest release was recorded (someone
+promoted a single part, say), it goes to the newest release instead: the
+last state known to be good. `--dry-run` shows which.
+
+A rollback returns every part to what it ran in that release, and is
+recorded as a new release with a note. A part that already runs that
+version is left alone, and so is a part that joined the application after
+that release. If a part fails during a rollback, the rollback stops: fix
+the cause and run it again.
+
+Both commands ask you to type the application's name, unless you pass
+`--yes`. They need what promoting one part needs: membership of the owning
+team (a [personal token](02-install-and-login.md) needs the deploy scope).
+CI cannot call them.
+
+While a promotion or rollback of the application runs, production of every
+part is locked: a deploy of a part to production waits its turn, and a
+second promotion of the application is refused. If a part changed between
+the moment you asked and the moment the operation got its locks, it does
+nothing and says so: run it again.
+
+Two things a put back does not undo. A version tag that was cut for a part
+stays in its repo; the next promotion of that commit reuses it. And if the
+Forge API restarts in the middle of the operation, the parts stay as far as
+it got: check with `forge application get shop`, then promote again or roll
+back.
+
+You can still promote or roll back a single part with `forge deploy
+promote` and `forge deploy rollback`. The releases do not record that, so
+production then differs from the newest release until the next promotion of
+the application.
+
 ## Teams
 
 `forge team list` shows the organization's teams and how many members each

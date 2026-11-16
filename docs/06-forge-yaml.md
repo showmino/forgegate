@@ -101,7 +101,7 @@ port 8080 with the probe on `/healthz`.
 | `autoscaling.max` | Production grows from `replicas` up to this many pods on CPU | [Run options](09-run-options.md) |
 | `resources` | CPU and memory requests and limits per pod | [Run options](09-run-options.md) |
 | `env` | Plain environment variables | [Run options](09-run-options.md) |
-| `links` | Other parts of the service's application. For each, the pods get `<PART>_URL`, its address in the same environment. Needs `service.application` and Forge 0.58.0 or later | [Linking parts](12-catalog.md#linking-parts) |
+| `links` | Other parts of the service's application. For each, the pods get `<PART>_URL`, its address in the same environment. `<part>/<resource>` is a part's shared database and gives `DATABASE_URL`. Needs `service.application` and Forge 0.58.0 or later | [Linking parts](12-catalog.md#linking-parts) |
 | `secrets` | 1Password items, given to the app as environment variables | [Run options](09-run-options.md) |
 | `jobs` | Cron jobs that run the service's image, with its env and secrets | [Run options](09-run-options.md) |
 
@@ -165,6 +165,9 @@ move the repo to another cloud account.
 
 Things a service needs besides its pods: today, one Postgres database. See
 [Resources](14-resources.md).
+
+`share: true` on a database lets the other parts of the service's
+application use it: see [Sharing a Database](12-catalog.md#sharing-a-database).
 
 ## docs
 

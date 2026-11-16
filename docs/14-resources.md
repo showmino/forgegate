@@ -126,6 +126,11 @@ Raise `storage` or `instances`, then plan and apply. Volumes grow in place.
 The volumes stay on disk, so the platform team can recover the data by
 hand. A service cannot be deleted while it still has resources.
 
+## Share a Database With Another Service
+
+A database can be used by the other parts of the service's application: see
+[Sharing a Database](12-catalog.md#sharing-a-database).
+
 ## Previews
 
 Preview environments get no database and no `DATABASE_URL`.

@@ -130,7 +130,7 @@ A worker runs the same way as any service, with these differences:
   change in staging instead.
 - Another part cannot link to it, since it has no address. The worker
   itself can have [links](12-catalog.md#linking-parts), and can use another
-  part's shared database.
+  part's [shared database](12-catalog.md#sharing-a-database).
 
 Deploys, versions, promote and rollback, replicas, autoscaling, resources,
 `env`, `secrets`, `jobs`, restart and scale work as for any service. A

@@ -100,7 +100,7 @@ Two rules keep applications in order:
 
 ### Linking Parts
 
-A part that calls another part of its application names it in `run.links`
+A part that uses another part of its application names it in `run.links`
 in its forge.yaml:
 
 ```yaml
@@ -145,6 +145,69 @@ What to know:
 - A preview gets no links, as it gets no `env`.
 - `forge application get shop` shows each part's links in the column
   LINKS TO.
+
+### Sharing a Database
+
+A database belongs to the service that declares it. Another part of the
+same application, such as a worker next to its API, can use it too.
+
+1. **The owning part shares it.** Add `share: true` to the resource in its
+   forge.yaml, then deploy the part to each environment where the database
+   exists:
+
+   ```yaml
+   service:
+     name: shop-api
+     team: billing
+     application: shop
+   resources:
+     - name: main
+       type: postgres
+       share: true
+   ```
+
+2. **The other part links to it**, by the owning part's name and the
+   resource's name, and is deployed:
+
+   ```yaml
+   service:
+     name: shop-worker
+     team: billing
+     application: shop
+   run:
+     links: [shop-api/main]
+   ```
+
+The linking part's pods get `DATABASE_URL` for that database: the same
+database and the same credentials the owning part has. In
+`forge application get shop` the link shows as `shop-api/main`.
+
+What to know:
+
+- The deploy of the linking part is refused until the owning part runs in
+  that environment with the database shared. The message says which step is
+  missing. This holds for a promote too: production's owning part must
+  share production's database.
+- A service has one database: its own or a linked one. A service with
+  `resources` of its own cannot link to another part's database.
+- Forge copies the database's URL into the linking part's namespace at each
+  deploy of that part. If the database's password changes, deploy the
+  linking part again to pick it up.
+- Removing the link from `run.links` and deploying removes the copy, and
+  the pods lose `DATABASE_URL`.
+- To stop sharing, remove `share: true` and deploy the owning part. Forge
+  then removes the copy from every part that linked to the database: their
+  pods lose it when they next start, and those parts cannot be deployed
+  again until the link is out of their forge.yaml. Remove the links first
+  if the parts should keep running.
+- A service cannot change application (`forge service update
+  --application`) while what it runs has links or shares its database.
+  Remove them from its forge.yaml and deploy it first.
+- The linking part's pods must be able to reach PostgreSQL in the owning
+  part's namespace. If the cluster restricts traffic between namespaces,
+  the platform team has to allow it.
+- Sharing needs the platform to run Forge from the `forge` chart at 0.58.0
+  or later.
 
 ## Teams
 

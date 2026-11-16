@@ -43,6 +43,7 @@ run:
     limits: {cpu: 250m, memory: 256Mi}
   env:
     LOG_LEVEL: info
+  links: [ledger]                 # parts of the same application: sets LEDGER_URL
   secrets:
     - name: stripe                # becomes the Kubernetes Secret stripe-secret
       item: vaults/Apps/items/payments-stripe
@@ -100,6 +101,7 @@ port 8080 with the probe on `/healthz`.
 | `autoscaling.max` | Production grows from `replicas` up to this many pods on CPU | [Run options](09-run-options.md) |
 | `resources` | CPU and memory requests and limits per pod | [Run options](09-run-options.md) |
 | `env` | Plain environment variables | [Run options](09-run-options.md) |
+| `links` | Other parts of the service's application. For each, the pods get `<PART>_URL`, its address in the same environment. Needs `service.application` and Forge 0.58.0 or later | [Linking parts](12-catalog.md#linking-parts) |
 | `secrets` | 1Password items, given to the app as environment variables | [Run options](09-run-options.md) |
 | `jobs` | Cron jobs that run the service's image, with its env and secrets | [Run options](09-run-options.md) |
 

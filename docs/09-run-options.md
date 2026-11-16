@@ -97,6 +97,10 @@ const ledger = `http://ledger.${process.env.FORGE_ENVIRONMENT}.apps.example.com`
 A preview has no copy of the other service: point it at staging, or leave
 the feature off there.
 
+When both services are parts of the same
+[application](12-catalog.md#applications), let Forge set the address: see
+[Linking Parts](12-catalog.md#linking-parts).
+
 ## Secrets From 1Password
 
 ```yaml

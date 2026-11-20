@@ -300,9 +300,9 @@ change**, and four numbers:
 
 Under them, **Services that need a look first** (or **Your services**, for a
 team member) shows each service in the environment where it hurts most,
-broken first. Next to it, **Needs you** lists the problems with a button to
-open or extend each; when nothing needs you, **Get started** shows the way
-from your first service to production. At the bottom are the deploys that
+broken first. When something needs you, **Needs you** sits next to it and
+lists the problems with a button to open or extend each; when nothing does,
+the services have the row to themselves. At the bottom are the deploys that
 ended in the last 24 hours, the status of production, staging, previews,
 deploys and clusters, and quick links.
 

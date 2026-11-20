@@ -102,6 +102,9 @@ commit asked for. Rolling back to a deploy from before public addresses does
 not take the service off the internet, and a rollback never makes an internal
 staging public.
 
+Services that are parts of one application can be promoted and rolled back
+together: see [Releasing an Application](12-catalog.md#releasing-an-application).
+
 ## Restart and Scale
 
 Between deploys, the service's team can give an environment new pods or

@@ -123,7 +123,7 @@ deploys:
 
 | Value | Default | What |
 | --- | --- | --- |
-| `github.org` | (required) | Your GitHub organization. Only its members can sign in |
+| `github.org` | (required) | Your GitHub organization. Only its members can sign in. The dashboard's home page is titled after it, with the name GitHub shows for it (`My Org Developer Platform`), or its slug when it has no name |
 | `github.appID` | (required) | Your GitHub App's numeric ID |
 | `github.existingSecret` | `forge-github` | A Secret in the release's namespace with three keys: `app-private-key` (the App's `.pem`), `client-id` and `client-secret` (the login uses them) |
 | `github.keys.appPrivateKey`, `github.keys.clientID`, `github.keys.clientSecret` | `app-private-key`, `client-id`, `client-secret` | The key names in that Secret, when yours are named otherwise (for example by a secrets operator that keeps a vault's field names) |
